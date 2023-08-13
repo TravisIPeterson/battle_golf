@@ -18,8 +18,7 @@ def test_display_stats(capsys):
     assert "Power: 10" in captured.out
     assert "Accuracy: 15" in captured.out
 
-def test_select_green():
-    # 1. Competitiveness dominates
+def test_select_green_competitiveness_dominates():
     player = Player("Striker", stats={"Competitiveness": 20, "Cowardice": 10})
 
     results = [player.select_green() for _ in range(1000)]
@@ -28,8 +27,8 @@ def test_select_green():
 
     assert rival_count / 1000 > 0.2  # let's say the rival green should be selected at least 20% of the time
 
-    # 2. Cowardice dominates
-    player.stats = {"Competitiveness": 10, "Cowardice": 20}
+def test_select_green_cowardice_dominates():
+    player = Player("Striker", stats={"Competitiveness": 10, "Cowardice": 20})
 
     results = [player.select_green() for _ in range(1000)]
     left_neighbor = (player.green_number - 1) % 8 + 1
@@ -38,8 +37,8 @@ def test_select_green():
     neighbors_count = results.count(left_neighbor) + results.count(right_neighbor)
     assert neighbors_count / 1000 > 0.3  # let's say neighboring greens should be selected at least 30% combined
 
-    # 3. Balanced stats
-    player.stats = {"Competitiveness": 15, "Cowardice": 15}
+def test_select_green_balanced_stats():
+    player = Player("Striker", stats={"Competitiveness": 15, "Cowardice": 15})
 
     results = [player.select_green() for _ in range(1000)]
     count_dict = {i: results.count(i) for i in range(1, 9)}
@@ -47,6 +46,7 @@ def test_select_green():
     # Assert no green has an overly dominant selection rate
     for count in count_dict.values():
         assert 0.09 < count / 1000 < 0.15  # each green should be selected between 9% to 15% of the time
+
 
 
 def test_drive():
@@ -60,7 +60,10 @@ def test_drive():
             return -10 <= position[0] <= 10 and -10 <= position[1] <= 10
 
         def distance_from_center(self, position):
-            return ((position[0]**2) + (position[1]**2))**0.5
+            dx = position[0]
+            dy = position[1]
+            distance = ((dx**2) + (dy**2))**0.5
+            return min(distance, 10)  # Ensure it doesn't exceed the green's radius
     
     player = Player("Striker", stats={"Power": 15, "Accuracy": 15, "Competitiveness": 15})
 
