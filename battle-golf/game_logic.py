@@ -12,16 +12,12 @@ class GameState:
 
 # Game events
 class GameEvent:
-    COLLISION = 1
-    OUT_OF_BOUNDS = 2
-    NEXT_BALL = 3
+    OUT_OF_BOUNDS = 1
+    NEXT_BALL = 2
 
 def handle_event(event, *args):
     """Handle different game events."""
-    if event == GameEvent.COLLISION:
-        # Placeholder for collision logic
-        pass
-    elif event == GameEvent.OUT_OF_BOUNDS:
+    if event == GameEvent.OUT_OF_BOUNDS:
         # Placeholder for out-of-bounds logic
         pass
     elif event == GameEvent.NEXT_BALL:
@@ -37,6 +33,9 @@ def run_simulation():
     ball_counter = 0
     total_balls = 20
     current_ball = None
+
+    # Define field bounds (for ball-wall collision). Adjust values as required.
+    x1, y1, x2, y2 = 0, 0, 100, 100
 
     # Initialize greens and teams
     greens = [Green() for _ in range(8)]
@@ -58,23 +57,23 @@ def run_simulation():
             if green.ball_on_green(current_ball):
                 active_team = green_team_map[green]
                 break
+
+        # Check for wall collisions
+        x1, y1, x2, y2 = green.bounds
+        current_ball.collide_with_wall(x1, y1, x2, y2)
         
         # Check for game events
-        collision_detected = any(player.check_collision(current_ball) for player in active_team.players)
         out_of_bounds = any(green.is_out_of_bounds(current_ball.position) for green in greens)
 
-        if collision_detected:
-            handle_event(GameEvent.COLLISION)
         if out_of_bounds:
             handle_event(GameEvent.OUT_OF_BOUNDS)
 
         # Update game state based on events or other logic
         if state == GameState.RUNNING:
             current_ball.move(delta_time)
-            # ... other logic ...
-
-            for player in active_team.players:
-                player.take_action(...)
+            
+            for player in active_team.players.values():
+                player.take_action(current_ball)  # Assuming take_action requires current_ball as a parameter
 
         # Sleep for a bit before next iteration
         time.sleep(delta_time)
