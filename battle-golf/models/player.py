@@ -11,7 +11,8 @@ class Player:
         self.stats = stats if stats else {
             key: random.randint(1, 20) for key in [
                 'Power', 'Accuracy', 'Speed', 'Visual Calculus', 'Balance', 
-                'Solidity', 'Savagery', 'Competitiveness', 'Cowardice', 'Neoliberalism'
+                'Solidity', 'Savagery', 'Competitiveness', 'Cowardice', 'Neoliberalism',
+                'Integrity'
             ]
         }
         self.position = (0, 0)
@@ -323,23 +324,27 @@ class Player:
         self.position = (0, 0)
 
     def neoliberal_agenda(self, players):
-    """A function for the 'Neoliberalism' stat. It can represent any game mechanic 
-    where the player may have an advantage/disadvantage based on economic strategy or relationships.
-    This is just a humorous addition and can be interpreted in multiple ways."""
+        """A function for the 'Neoliberalism' stat, representing a player's ability to 'bribe' others."""
 
-    # For simplicity, a player with a higher Neoliberalism stat might have a chance to 'bribe' other players
-    # and make them perform worse temporarily. 
-    bribe_success_chance = self.stats['Neoliberalism'] / 20.0  # normalized to [0.05, 1]
+        # Calculate the chance of attempting a bribe based on Neoliberalism stat
+        bribe_attempt_chance = self.stats['Neoliberalism'] / 20.0  # normalized to [0.05, 1]
 
-    if random.random() < bribe_success_chance:
-        # Choose a player to bribe; in a more refined version, this could consider player positions, roles, etc.
-        bribed_player = random.choice(players)
-        
-        # Reduce the bribed player's stats temporarily. The mechanics of how and when to restore them is up to you.
-        for stat, value in bribed_player.stats.items():
-            bribed_player.stats[stat] = int(value * 0.9)  # Reducing each stat by 10%
+        # If the player tries to bribe
+        if random.random() < bribe_attempt_chance:
+            # Choose a player to try and bribe
+            potential_bribe_target = random.choice(players)
 
-        print(f"{self.role} has successfully bribed {bribed_player.role}!")
+            # Calculate the target player's resistance to bribery based on Integrity and Competitiveness
+            bribe_resistance = (potential_bribe_target.stats['Integrity'] + potential_bribe_target.stats['Competitiveness']) / 40.0  # normalized to [0.1, 2]
 
-    else:
-        print(f"{self.role} failed to bribe another player!")
+            # If the bribe attempt surpasses the resistance
+            if bribe_attempt_chance / bribe_resistance > random.random():
+                # Reduce the bribed player's stats temporarily. Mechanism of how and when to restore them to be determined.
+                for stat, value in potential_bribe_target.stats.items():
+                    potential_bribe_target.stats[stat] = int(value * 0.9)  # Reducing each stat by 10%
+
+                print(f"{self.role} has successfully bribed {potential_bribe_target.role}!")
+            else:
+                print(f"{potential_bribe_target.role} resisted the bribe from {self.role}!")
+        else:
+            print(f"{self.role} chose not to bribe another player.")
