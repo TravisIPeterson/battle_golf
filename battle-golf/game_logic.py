@@ -1,36 +1,85 @@
-class BattleGolf:
-    def __init__(self, teams, ball, greens):
-        self.teams = teams
-        self.ball = ball
-        self.greens = greens
-        self.turns = 0
+from models.ball import Ball
+from models.player import Player
+from models.team import Team
+from models.green import Green
+import time
 
-    def play_turn(self):
-        for team in self.teams:
-            for player in team.players:
-                # Players take actions based on their roles and current game state
-                # This might include moving towards the ball, aiming, shooting, etc.
-                player.take_action(self.ball, self.greens)
+# Define game states
+class GameState:
+    INITIALIZING = 1
+    RUNNING = 2
+    ENDED = 3
 
-        # Ball physics are applied after all players have taken their actions
-        self.ball.move()
+# Game events
+class GameEvent:
+    COLLISION = 1
+    OUT_OF_BOUNDS = 2
+    NEXT_BALL = 3
 
-        # Update scores or other game state parameters based on ball's new position, etc.
-        self.update_game_state()
-
-    def update_game_state(self):
-        # Check if ball is in any hole, update scores, check for game end condition, etc.
+def handle_event(event, *args):
+    """Handle different game events."""
+    if event == GameEvent.COLLISION:
+        # Placeholder for collision logic
         pass
-
-    def play_game(self, max_turns=100):
-        while self.turns < max_turns:
-            self.play_turn()
-            self.turns += 1
-            # Optional: Print current game state after each turn for debugging/visualization
-
-        # End of game, display result or save stats
-        self.end_game()
-
-    def end_game(self):
-        # Determine winner, display result, etc.
+    elif event == GameEvent.OUT_OF_BOUNDS:
+        # Placeholder for out-of-bounds logic
         pass
+    elif event == GameEvent.NEXT_BALL:
+        # Magic happens
+        pass
+    # ... add more event handling as necessary ...
+
+def run_simulation():
+    """Main function to run the ball simulation game."""
+
+    # Initialization
+    state = GameState.INITIALIZING
+    ball_counter = 0
+    total_balls = 20
+    current_ball = None
+
+    # Initialize greens and teams
+    greens = [Green() for _ in range(8)]
+    teams = [Team(f'Team {i+1}') for i in range(8)]
+    green_team_map = {greens[i]: teams[i] for i in range(8)}
+
+    # Main game loop
+    while state != GameState.ENDED:
+        if current_ball is None or any(green.ball_out_of_play(current_ball) for green in greens):
+            if ball_counter < total_balls:
+                ball_counter += 1
+                current_ball = Ball(...)  # Initialize new ball with required parameters
+            else:
+                state = GameState.ENDED
+                continue
+
+        for green in greens:
+            # Check if ball lands on this green
+            if green.ball_on_green(current_ball):
+                active_team = green_team_map[green]
+                break
+        
+        # Check for game events
+        collision_detected = any(player.check_collision(current_ball) for player in active_team.players)
+        out_of_bounds = any(green.is_out_of_bounds(current_ball.position) for green in greens)
+
+        if collision_detected:
+            handle_event(GameEvent.COLLISION)
+        if out_of_bounds:
+            handle_event(GameEvent.OUT_OF_BOUNDS)
+
+        # Update game state based on events or other logic
+        if state == GameState.RUNNING:
+            current_ball.move(delta_time)
+            # ... other logic ...
+
+            for player in active_team.players:
+                player.take_action(...)
+
+        # Sleep for a bit before next iteration
+        time.sleep(delta_time)
+
+    # End of game logic (display results, cleanup, etc.)
+
+if __name__ == "__main__":
+    run_simulation()

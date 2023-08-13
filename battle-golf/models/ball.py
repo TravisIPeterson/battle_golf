@@ -1,5 +1,7 @@
 import math
 import time
+import os
+import logging
 
 class Ball:
     def __init__(self, x, y, radius, mass, velocity_x, velocity_y):
@@ -9,7 +11,7 @@ class Ball:
         self.mass = mass
         self.velocity_x = velocity_x
         self.velocity_y = velocity_y
-        self.acceleration_y = -9.81  # gravity, negative as it's pulling the ball downwards
+        self.acceleration_y = 9.81  # gravity, negative as it's pulling the ball downwards
 
     def move(self, delta_time):
         """Update position of the ball based on its velocity."""
@@ -19,13 +21,14 @@ class Ball:
         # Apply gravity
         self.velocity_y += self.acceleration_y * delta_time
 
+
     def collide_with_ball(self, other_ball):
         """Handle collision with another ball. Elastic collision formula is applied here."""
-        dx = other_ball.x - self.x
-        dy = other_ball.y - self.y
-        distance = math.sqrt(dx * dx + dy * dy)
+        dx = self.x - other_ball.x
+        dy = self.y - other_ball.y
+        distance = math.sqrt(dx**2 + dy**2)
 
-        if distance < self.radius + other_ball.radius:  # Collision detected
+        if distance <= (self.radius + other_ball.radius):  # Collision detected
             angle = math.atan2(dy, dx)
             sin = math.sin(angle)
             cos = math.cos(angle)
@@ -60,30 +63,11 @@ class Ball:
             self.y -= overlap * (self.y - other_ball.y) / distance
             other_ball.x += overlap * (self.x - other_ball.x) / distance
             other_ball.y += overlap * (self.y - other_ball.y) / distance
-
-def test_ball_physics():
-    # Creating two balls
-    ball1 = Ball(x=0, y=10, radius=1, mass=1, velocity_x=5, velocity_y=0)
-    ball2 = Ball(x=2, y=10, radius=1, mass=1, velocity_x=-5, velocity_y=0)
-
-    delta_time = 0.01  # 10 milliseconds per time step
-    total_simulation_time = 2  # Run the simulation for 1 second
-
-    current_time = 0
-
-    while current_time < total_simulation_time:
-        ball1.move(delta_time)
-        ball2.move(delta_time)
-
-        ball1.collide_with_ball(ball2)  # Check and handle collisions
-
-        print(f"Time: {current_time:.2f}")
-        print(f"Ball1 - x: {ball1.x:.2f}, y: {ball1.y:.2f}, velocity_x: {ball1.velocity_x:.2f}, velocity_y: {ball1.velocity_y:.2f}")
-        print(f"Ball2 - x: {ball2.x:.2f}, y: {ball2.y:.2f}, velocity_x: {ball2.velocity_x:.2f}, velocity_y: {ball2.velocity_y:.2f}")
-        print("-----------")
-
-        current_time += delta_time
-        time.sleep(delta_time)  # Optional: To see the printed results at a more readable pace
-
-if __name__ == "__main__":
-    test_ball_physics()
+    
+    def collide_with_wall(self, x1, y1, x2, y2):
+        """Handle collisions with the boundary walls."""
+        if self.x - self.radius < x1 or self.x + self.radius > x2:
+            self.velocity_x = -self.velocity_x  # Reflect ball's x velocity if hit vertical walls
+        
+        if self.y - self.radius < y1 or self.y + self.radius > y2:
+            self.velocity_y = -self.velocity_y  # Reflect ball's y velocity if hit horizontal walls

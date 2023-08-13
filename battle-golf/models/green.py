@@ -42,3 +42,6 @@ class Green:
         # Check if a position is within the green's boundary
         distance = self.distance_from_center(position)
         return distance <= self.radius
+
+    def ball_on_green(self, ball):
+        return self.is_within_boundary(ball.position)
