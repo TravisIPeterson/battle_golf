@@ -232,6 +232,8 @@ class Player:
         if random.random() < bribe_attempt_chance:
             potential_bribe_target = random.choice(players)
             bribe_resistance = (potential_bribe_target.stats['Integrity'] + potential_bribe_target.stats['Competitiveness']) / 40.0
+            if bribe_resistance < 1:
+                bribe_resistance = 1
 
             if bribe_attempt_chance / bribe_resistance > random.random():
                 for stat, value in potential_bribe_target.stats.items():
