@@ -6,59 +6,81 @@ import random
 
 class GameLogic:
     def __init__(self):
-        # Initialize two teams of players (for simplicity, each team has one of each role)
-        self.team_A = [Player(role="driver"), Player(role="marksman"), Player(role="blocker"), Player(role="goalie")]
-        self.team_B = [Player(role="driver"), Player(role="marksman"), Player(role="blocker"), Player(role="goalie")]
-        self.ball_position = (0, 0)
+        # Initialize 8 teams and distribute them across 8 greens
+        self.teams = [Team(i+1) for i in range(8)]
+        for i, team in enumerate(self.teams):
+            team.players['Driver'].green_number = i + 1
+            
+        self.ball_green_number = 1  # Starting ball position on Green 1
         self.turns = 20  # Play for 20 turns for simplicity
+        self.all_greens = list(range(1, 9))
 
-    def play_turn(self, player):
+    def get_team_on_green(self, green_number):
+        for team in self.teams:
+            if team.players['Driver'].green_number == green_number:  # Using the Driver as a reference, assuming all team members are on the same green
+                return team
+        return None
+
+    def play_turn(self, player, ball_pursuers):
+        print(f"{player.role} is starting their turn.")
         # Check if the player wants to go for the ball
-        if player.should_go_for_ball(self.ball_position):
-            # Decide the action based on the player's role
-            if player.role == "driver":
-                target_green = player.select_green()
-                # Simulate the drive
-                result_green = player.drive(target_green, player.green_number)
-                if result_green:
-                    self.ball_position = (result_green, 0)
-                else:
-                    # Ball does not land on any green
-                    self.ball_position = (-1, -1)
+        pursuing = player.should_go_for_ball(self.ball_green_number, len(ball_pursuers))
+        if pursuing:
+            ball_pursuers.append(player)
 
-            elif player.role == "marksman":
-                chosen_green, aim_for_player = player.aimed_shot(list(range(1, 9)), self.team_A + self.team_B)
-                if aim_for_player:
-                    # The ball position remains the same, but a player is potentially hit
-                    hit_player = next(p for p in (self.team_A + self.team_B) if p.green_number == chosen_green)
-                    hit_player.green_number = 0  # The player is hit and sent to a penalty green
-                else:
-                    self.ball_position = (chosen_green, 0)
-
-            elif player.role == "blocker":
-                if player.block(self.ball_position):
+            if player.role == "blocker":
+                if player.block(self.ball_green_number):
                     # Successful block, ball's position remains the same but is with the blocker
-                    self.ball_position = player.position
+                    print(f"{player.role} from Team {player.team_name} blocked the ball. Ball is now on Green {self.ball_green_number}")  # Debugging line
+            
+            elif player.role == "marksman":
+                all_players = [p for team in self.teams for p in team.players.values()]
+                chosen_green, aim_for_player = player.aimed_shot(list(range(1, 9)), all_players)
+                if aim_for_player:
+                    assert all(p.green_number != 0 for p in all_players)
+                    hit_player = next(p for p in all_players if p.green_number == chosen_green)
+                else:
+                    self.ball_green_number = chosen_green
 
             elif player.role == "goalie":
-                if not player.save(self.ball_position):
-                    # Goalie failed to save, ball remains in its position and goalie may fall into a hole
-                    if random.random() > player.calculate_save_probability(0, 0):  # Using dummy values for speed and direction for now
+                if not player.save():
+                    if random.random() > player.calculate_save_probability(0, 0):
                         player.fall_into_hole()
 
-            player.neoliberal_agenda(self.team_A + self.team_B)
+            all_players = [player for team in self.teams for player in team.players.values()]
+            player.neoliberal_agenda(all_players)
 
     def play_game(self):
         for turn in range(self.turns):
             print(f"\nTurn {turn + 1}:")
+            print(f"Ball is currently on Green {self.ball_green_number}")  # Debugging line
 
-            # Players from team A take their turns
-            for player in self.team_A:
-                self.play_turn(player)
+            current_team = self.get_team_on_green(self.ball_green_number)
+            if not current_team:
+                print("Error: No team found on current green!")
+                break
+            
+            ball_pursuers = []  # Reset list of players pursuing the ball for this turn
 
-            # Players from team B take their turns
-            for player in self.team_B:
-                self.play_turn(player)
+            # Players from team A and B take their turns
+            for player in current_team.players.values():
+                self.play_turn(player, ball_pursuers)  
+            
+            # Determine which player actually gets the ball based on player's calculated speed
+            if ball_pursuers:  # Check if there are any pursuers
+                # Use the calculate_speed() function for each player to get their current speed
+                fastest_player = max(ball_pursuers, key=lambda player: player.calculate_speed())
+                
+                # The fastest player gets the ball
+                self.ball_green_number = fastest_player.green_number
+                
+                # Print the result
+                random_msg = random.choice([
+                    f"{fastest_player.role.capitalize()} from {fastest_player.team_name} reached the ball first!",
+                    f"{fastest_player.role.capitalize()} from {fastest_player.team_name} was the quickest to the ball!",
+                    f"Speedy {fastest_player.role} from {fastest_player.team_name} grabbed the ball!"
+                ])
+                print(random_msg)
 
             # At the end of each turn, you can calculate scores, display stats, or make other game-related decisions
 

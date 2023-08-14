@@ -5,7 +5,7 @@ import math
 class Player:
     MAX_SPEED = 20  # Maximum speed a player can achieve
 
-    def __init__(self, role, stats=None):
+    def __init__(self, role, team_name, green_number=1, stats=None):
         self.role = role
         self.stats = stats if stats else {
             key: random.randint(1, 20) for key in [
@@ -14,8 +14,8 @@ class Player:
                 'Integrity'
             ]
         }
-        self.position = (0, 0)
-        self.green_number = random.randint(1, 8)
+        self.green_number = green_number
+        self.team_name = team_name
 
     def calculate_speed(self):
         """Calculate player's speed based on various factors."""
@@ -30,25 +30,36 @@ class Player:
         print(f"Role: {self.role}")
         for stat, value in self.stats.items():
             print(f"{stat}: {value}")
-
-    def should_go_for_ball(self, ball_position):
-        # Assuming ball_position is a tuple where the first value is the green number
-        ball_green = ball_position[0]
-        decision = False
         
-        # Check if the ball is on the same green as the player
-        if ball_green == self.green_number:
-            # Further logic (if any) for when the player should go for the ball
-            decision = True
+        decision = False
+
+    def should_go_for_ball(self, ball_position, num_pursuers):
+        print(f"{self.role} is deciding whether to pursue the ball.")
+        # Assuming there's a max chance for the first pursuer, which decreases by 20% for each subsequent pursuer
+        chance = 1.0 - num_pursuers * 0.2
+        decision = random.random() <= chance
+
+        # Check if the player is on the same green as the ball
+        if self.green_number != ball_position[0]:
+            decision = False
+
+        # Prioritize actions based on player roles
+        if self.role == "blocker":
+            return decision
+        elif self.role in ["driver", "marksman"]:
+            return decision
+        elif self.role == "goalie": # if ball is blocked
+            return decision
 
         if decision:
             print(random.choice([f"{self.role.capitalize()} decided to go for the ball!",
-                                 f"{self.role.capitalize()} is making a move towards the ball!",
-                                 f"Watch out! The {self.role} is on the move!"]))
+                                f"{self.role.capitalize()} is making a move towards the ball!",
+                                f"Watch out! The {self.role} is on the move!"]))
         else:
             print(random.choice([f"{self.role.capitalize()} chose to stay put.",
-                                 f"{self.role.capitalize()} is playing it safe.",
-                                 f"Seems like the {self.role} is biding their time."]))
+                                f"{self.role.capitalize()} is playing it safe.",
+                                f"Seems like the {self.role} is biding their time."]))
+        return decision
 
     def select_green(self):
         num_greens = 8
@@ -147,7 +158,7 @@ class Player:
         # Determine success based on the overall capability vs. a random threshold (can be adjusted)
         BLOCK_THRESHOLD = random.uniform(0.5, 1)  # The higher the threshold, the harder it is to block
         if overall_block_capability > BLOCK_THRESHOLD:
-            ball.position = self.position  # If using a ball class, update the ball's position to be with the blocker
+            ball.green_number = self.green_number  # If using a ball class, update the ball's position to be with the blocker
             success = True  # block is successful
         if success:
             print(random.choice([f"Amazing block by the {self.role}!",
@@ -159,45 +170,6 @@ class Player:
                                  f"{self.role.capitalize()} failed to intercept."]))
         return success
 
-    def aimed_shot(self, greens, players):
-        num_greens = len(greens)
-        greens_probabilities = [1 / float(num_greens)] * num_greens
-
-        rival_green = (self.green_number + num_greens // 2 - 1) % num_greens + 1
-        competitiveness_factor = (self.stats['Competitiveness'] - 10) / 10.0
-        greens_probabilities[rival_green - 1] += competitiveness_factor * 0.1
-
-        # Normalize probabilities
-        total = sum(greens_probabilities)
-        greens_probabilities = [p / total for p in greens_probabilities]
-
-        # Adjust for rounding discrepancies
-        discrepancy = 1.0 - sum(greens_probabilities)
-        greens_probabilities[-1] += discrepancy
-
-        # Safety check
-        if not math.isclose(sum(greens_probabilities), 1.0, abs_tol=1e-10):
-            raise ValueError("Probabilities do not sum up to 1.")
-
-        chosen_green = np.random.choice(greens, p=greens_probabilities)
-
-        # Determine if the player aims for the hole or another player based on savagery
-        aim_for_player = random.random() < (self.stats['Savagery'] / 20.0)
-
-        if aim_for_player:
-            # Choose a player to target
-            targeted_player = random.choice(players)
-            print(random.choice([f"{self.role.capitalize()} is aiming for a player on Green {chosen_green}!",
-                                 f"Watch out! {self.role.capitalize()} has a player in their sights on Green {chosen_green}.",
-                                 f"A sneaky shot aimed at a player on Green {chosen_green} by the {self.role}."]))
-
-            return targeted_player.green_number, aim_for_player
-        else:
-            print(random.choice([f"{self.role.capitalize()} decided to aim for Green {chosen_green}.",
-                                 f"The ball is flying towards Green {chosen_green}!",
-                                 f"{self.role.capitalize()} has sent the ball towards Green {chosen_green}."]))
-            return chosen_green, aim_for_player
-        
     def save(self, ball):
         save_prob = self.calculate_save_probability(ball.speed, ball.direction)
 

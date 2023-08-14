@@ -5,7 +5,10 @@ class Team:
     def __init__(self, team_name, players=None):
         self.team_name = team_name
         default_roles = ['Driver', 'Blocker', 'Marksman', 'Goalie']
-        self.players = players if players else {role: Player(role) for role in default_roles}
+        if players:
+            self.players = players
+        else:
+            self.players = {role: Player(role, green_number=int(self.team_name), team_name=self.team_name) for role in default_roles}
 
     def display_team(self):
         print(f"Team: {self.team_name}")
