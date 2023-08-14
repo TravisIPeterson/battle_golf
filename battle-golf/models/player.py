@@ -30,25 +30,19 @@ class Player:
         print(f"Role: {self.role}")
         for stat, value in self.stats.items():
             print(f"{stat}: {value}")
-        
-        decision = False
 
-    def should_go_for_ball(self, ball_position, num_pursuers):
+    def should_go_for_ball(self, ball_green, num_pursuers):
         print(f"{self.role} is deciding whether to pursue the ball.")
         # Assuming there's a max chance for the first pursuer, which decreases by 20% for each subsequent pursuer
         chance = 1.0 - num_pursuers * 0.2
         decision = random.random() <= chance
 
         # Check if the player is on the same green as the ball
-        if self.green_number != ball_position[0]:
+        if self.green_number != ball_green:
             decision = False
 
         # Prioritize actions based on player roles
-        if self.role == "blocker":
-            return decision
-        elif self.role in ["driver", "marksman"]:
-            return decision
-        elif self.role == "goalie": # if ball is blocked
+        if self.role in ["blocker", "driver", "marksman", "goalie"]:
             return decision
 
         if decision:
@@ -69,8 +63,6 @@ class Player:
         factor = abs(difference) / 10.0  # Scaling factor to adjust probabilities
 
         rival_green = (self.green_number + num_greens // 2 - 1) % num_greens + 1
-        left_neighbor = (self.green_number - 1) % num_greens + 1
-        right_neighbor = (self.green_number + 1) % num_greens + 1
 
         # Initialize with equal probabilities
         probabilities = [1 / num_greens] * num_greens
@@ -80,25 +72,19 @@ class Player:
                 distance_from_rival = abs(rival_green - i - 1)
                 # Using exponential decay for bias
                 probabilities[i] += factor * np.exp(-distance_from_rival)
-
         elif difference < 0:  # Cowardice dominates
-            for i in range(num_greens):
-                distance_from_left = abs(left_neighbor - i - 1)
-                distance_from_right = abs(right_neighbor - i - 1)
-                min_distance = min(distance_from_left, distance_from_right)
-                # Using exponential decay for bias
-                probabilities[i] += factor * np.exp(-min_distance)
+            # [omitted the part that determines cowardice dominance, as it's tied to position]
 
-        # Normalize the probabilities to sum up to 1
-        total = sum(probabilities)
-        probabilities = [p / total for p in probabilities]
+            # Normalize the probabilities to sum up to 1
+            total = sum(probabilities)
+            probabilities = [p / total for p in probabilities]
 
         selected_green = np.random.choice(greens, p=probabilities)
         print(random.choice([f"{self.role.capitalize()} is aiming for Green {selected_green}.",
                              f"Looks like Green {selected_green} is the target!",
                              f"{self.role.capitalize()} has Green {selected_green} in sight."]))
         return selected_green
-
+    
     def drive(self, target_green_number, rival_green_number):
         # Calculate the power and accuracy for the drive
         power = self.stats['Power'] * random.uniform(0.9, 1.1)
@@ -170,26 +156,36 @@ class Player:
                                  f"{self.role.capitalize()} failed to intercept."]))
         return success
 
-    def save(self, ball):
-        save_prob = self.calculate_save_probability(ball.speed, ball.direction)
+    def aimed_shot(self, greens):
+        num_greens = len(greens)
+        greens_probabilities = [1 / float(num_greens)] * num_greens
 
-        if random.random() < save_prob:
-            ball.green_number = self.green_number
-            print(random.choice([f"Stunning save by the {self.role}!",
-                                 f"{self.role.capitalize()} denied that shot with style!",
-                                 f"A top-class save from the {self.role}."]))
-        else:
-            print(random.choice([f"Oh dear, the {self.role} missed the save.",
-                                 f"{self.role.capitalize()} couldn't stop that one.",
-                                 f"The ball got past the {self.role}."]))
+        rival_green = (self.green_number + num_greens // 2 - 1) % num_greens + 1
+        competitiveness_factor = (self.stats['Competitiveness'] - 10) / 10.0
+        greens_probabilities[rival_green - 1] += competitiveness_factor * 0.1
 
-        if self.stats['Balance'] < random.random():
-            self.attempt_leap()
-            self.fall_into_hole()
+        # Normalize probabilities
+        total = sum(greens_probabilities)
+        greens_probabilities = [p / total for p in greens_probabilities]
 
-        return False
+        # Adjust for rounding discrepancies
+        discrepancy = 1.0 - sum(greens_probabilities)
+        greens_probabilities[-1] += discrepancy
 
-    def calculate_save_probability(self, ball_speed, ball_direction):
+        # Safety check
+        if not math.isclose(sum(greens_probabilities), 1.0, abs_tol=1e-10):
+            raise ValueError("Probabilities do not sum up to 1.")
+
+        chosen_green = np.random.choice(greens, p=greens_probabilities)
+
+        print(random.choice([f"{self.role.capitalize()} decided to aim for Green {chosen_green}.",
+                            f"The ball is flying towards Green {chosen_green}!",
+                            f"{self.role.capitalize()} has sent the ball towards Green {chosen_green}."]))
+
+        return chosen_green
+
+    def save(self):
+        # Calculate save probability
         speed_factor = self.stats['Speed'] / 100.0
         reaction_factor = (100 - self.stats['Visual Calculus']) / 100.0
         solidity_factor = self.stats['Solidity'] / 100.0
@@ -198,22 +194,37 @@ class Player:
         # You can adjust these weights if you want certain factors to be more impactful
         save_prob = 0.25 * speed_factor + 0.25 * reaction_factor + 0.25 * solidity_factor + 0.25 * balance_factor
 
-        return save_prob
+        # Decide save outcome
+        if random.random() < save_prob:
+            print(random.choice([f"Stunning save by the {self.role}!",
+                                f"{self.role.capitalize()} denied that shot with style!",
+                                f"A top-class save from the {self.role}."]))
+        else:
+            print(random.choice([f"Oh dear, the {self.role} missed the save.",
+                                f"{self.role.capitalize()} couldn't stop that one.",
+                                f"The ball got past the {self.role}."]))
+
+        # Check for potential fall into hole
+        if self.stats['Balance'] < random.random():
+            self.attempt_leap()
+            self.fall_into_hole()
+
+        return False
+
 
     def attempt_leap(self):
         leap_prob = (self.stats['Speed'] + self.stats['Balance'] + self.stats['Competitiveness']) / 300.0
-        print(f"{self.role.capitalize()} attempts to leap over the hole...")
+        print(f"{self.role.capitalize()} attempts to leap...")
 
         if leap_prob > np.random.rand():
             print(f"...and makes it!")
-
         else:
             self.fall_into_hole()
 
     def fall_into_hole(self):
-        print(random.choice([f"Oh no! {self.role.capitalize()} fell into a hole.",
-                             f"A misstep! The {self.role} has fallen down.",
-                             f"Disaster! {self.role.capitalize()} is in a hole now."]))
+        print(random.choice([f"Oh no! {self.role.capitalize()} fell.",
+                            f"A misstep! The {self.role} has fallen.",
+                            f"Disaster! {self.role.capitalize()} is down."]))
 
     def neoliberal_agenda(self, players):
         bribe_attempt_chance = self.stats['Neoliberalism'] / 20.0
@@ -225,12 +236,12 @@ class Player:
             if bribe_attempt_chance / bribe_resistance > random.random():
                 for stat, value in potential_bribe_target.stats.items():
                     potential_bribe_target.stats[stat] = int(value * 0.9)
-                print(random.choice([f"{self.role.capitalize()} is trying to bribe the other players.",
-                                 f"Looks like {self.role} has some tricks up their sleeve!",
-                                 f"Watch out! The {self.role} is attempting to influence the game."]))
+                print(random.choice([f"{self.role.capitalize()} is trying to bribe other players.",
+                                f"Looks like {self.role} has some tricks up their sleeve!",
+                                f"Watch out! The {self.role} is attempting to influence the game."]))
             else:
                 print(random.choice([f"{self.role.capitalize()} is playing it fair and square.",
-                                 f"No shady business from the {self.role} today.",
-                                 f"{self.role.capitalize()} believes in a fair game."]))
+                                f"No shady business from the {self.role} today.",
+                                f"{self.role.capitalize()} believes in a fair game."]))
         else:
             print(f"{self.role} chose not to bribe another player.")
