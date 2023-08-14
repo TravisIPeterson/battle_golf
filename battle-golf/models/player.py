@@ -1,10 +1,9 @@
 import random
 import numpy as np
-from .ball import Ball
+import math
 
 class Player:
     MAX_SPEED = 20  # Maximum speed a player can achieve
-    GREEN_BOUNDARY = 100  # define the boundary of the green
 
     def __init__(self, role, stats=None):
         self.role = role
@@ -17,15 +16,6 @@ class Player:
         }
         self.position = (0, 0)
         self.green_number = random.randint(1, 8)
-        self.green_boundary = GREEN_BOUNDARY
-        self.center_position = (0, 0)
-    
-    def normalize_vector(self, vector):
-        """Return a normalized version of a 2D vector."""
-        magnitude = (vector[0]**2 + vector[1]**2)**0.5
-        if magnitude == 0:  # Avoid dividing by zero
-            return (0, 0)
-        return (vector[0]/magnitude, vector[1]/magnitude)
 
     def calculate_speed(self):
         """Calculate player's speed based on various factors."""
@@ -42,34 +32,23 @@ class Player:
             print(f"{stat}: {value}")
 
     def should_go_for_ball(self, ball_position):
-        distance_to_ball = np.linalg.norm(np.array(ball_position) - np.array(self.position))
-        desire_factor = self.stats['Speed'] * self.stats['Competitiveness'] / 400.0  # just a derived metric
+        # Assuming ball_position is a tuple where the first value is the green number
+        ball_green = ball_position[0]
+        decision = False
         
-        if self.role in ["driver", "marksman"]:
-            threshold_distance = 20 * (1 - desire_factor)  # same as before
-            return distance_to_ball < threshold_distance
+        # Check if the ball is on the same green as the player
+        if ball_green == self.green_number:
+            # Further logic (if any) for when the player should go for the ball
+            decision = True
 
-        elif self.role == "blocker":
-            pursue_threshold = 15
-            defend_boundary = 5
-            if ball_position[0] > self.green_boundary - defend_boundary:
-                return False
-            return distance_to_ball < pursue_threshold
-
-        elif self.role == "goalie":
-            goalie_move_boundary = 20
-            danger_zone = 10
-
-            if np.linalg.norm(np.array(self.position) - np.array(self.center_position)) < danger_zone:
-                repelling_force = (danger_zone - distance_to_center) / danger_zone
-                if distance_to_ball * repelling_force < 5:  # Threshold to decide if goalie should take the risk
-                    return True
-                return False
-                
-            if np.linalg.norm(np.array(self.position) - np.array(self.center_position)) < goalie_move_boundary:
-                return True
-
-        return False
+        if decision:
+            print(random.choice([f"{self.role.capitalize()} decided to go for the ball!",
+                                 f"{self.role.capitalize()} is making a move towards the ball!",
+                                 f"Watch out! The {self.role} is on the move!"]))
+        else:
+            print(random.choice([f"{self.role.capitalize()} chose to stay put.",
+                                 f"{self.role.capitalize()} is playing it safe.",
+                                 f"Seems like the {self.role} is biding their time."]))
 
     def select_green(self):
         num_greens = 8
@@ -103,89 +82,84 @@ class Player:
         total = sum(probabilities)
         probabilities = [p / total for p in probabilities]
 
-        chosen_green = np.random.choice(greens, p=probabilities)
-        return chosen_green
+        selected_green = np.random.choice(greens, p=probabilities)
+        print(random.choice([f"{self.role.capitalize()} is aiming for Green {selected_green}.",
+                             f"Looks like Green {selected_green} is the target!",
+                             f"{self.role.capitalize()} has Green {selected_green} in sight."]))
+        return selected_green
 
-    def drive(self, target_green, rival_green_number):
-        # Uses the 'Power', 'Accuracy', and 'Competitiveness' stats
-        force = self.stats['Power'] * random.uniform(0.9, 1.1)
+    def drive(self, target_green_number, rival_green_number):
+        # Calculate the power and accuracy for the drive
+        power = self.stats['Power'] * random.uniform(0.9, 1.1)
         accuracy = self.stats['Accuracy'] * random.uniform(0.9, 1.1)
-        competitiveness = self.stats['Competitiveness'] * random.uniform(0.9, 1.1)
 
         # Calculate the rivalry intensity based on proximity to the rival's green
-        green_difference = abs(target_green.number - rival_green_number)
+        green_difference = abs(target_green_number - rival_green_number)
         if green_difference == 0:
             rivalry_intensity = 1  # Maximum intensity when targeting the rival's green directly
         else:
             rivalry_intensity = 1.0 / green_difference
 
         # Modify power and accuracy based on competitiveness and rivalry intensity
+        competitiveness = self.stats['Competitiveness'] * random.uniform(0.9, 1.1)
         competitive_boost = 1 + (competitiveness / 20.0 * rivalry_intensity)
-        force *= competitive_boost
+        power *= competitive_boost
         accuracy *= competitive_boost
 
-        # Calculate distance the ball is hit based on Power
-        max_distance = 100  # Assuming a maximum possible distance a ball can be hit
-        distance_hit = force / 20.0 * max_distance  # Normalize power to a fraction of max_distance
+        # Check if the drive is successful based on the stats and random variability
+        if power > random.uniform(17, 20) and accuracy > random.uniform(17, 20): #Successful Drive
+            print(random.choice([f"Successful drive by the {self.role}! Ball landed on Green {target_green}.",
+                                 f"{self.role.capitalize()} made an excellent shot to Green {target_green}.",
+                                 f"Bravo! The ball made it to Green {target_green} thanks to the {self.role}."]))
+            return target_green_number  
 
-        # Determine deviation from target based on Accuracy
-        max_deviation = 10  # Maximum deviation in any direction from the target
-        deviation_x = (random.uniform(-1, 1) * (1 - accuracy / 20.0) * max_deviation)
-        deviation_y = (random.uniform(-1, 1) * (1 - accuracy / 20.0) * max_deviation)
+        # Determine the type of failure
+        if power <= random.uniform(15, 18):  # Power failure
+            greens = list(range(1, 9))
+            probabilities = [1 / (abs(green - target_green_number) + 1e-10) for green in greens]  # Add a small constant to prevent division by zero
+            total = sum(probabilities)
+            if total == 0:  # This ensures that we don't encounter a situation where probabilities are all zeros.
+                return random.choice(greens)  # In this unlikely scenario, choose a random green
+            probabilities = [p / total for p in probabilities]  # Normalize probabilities
+            failed_green = np.random.choice(greens, p=probabilities)
+            return failed_green
+        else:  # Accuracy failure
+            return None  # Ball does not land on any green
 
-        # Determine ball's landing coordinates
-        target_x, target_y = target_green.position
-        landing_x = target_x + deviation_x
-        landing_y = target_y + deviation_y
-
-        # Ensure ball doesn't exceed the green's boundary
-        landing_x = max(-10, min(10, landing_x))
-        landing_y = max(-10, min(10, landing_y))
-
-        # If the ball lands on the green, calculate distance from the hole
-        if target_green.is_within_boundary((landing_x, landing_y)):
-            distance_from_hole = target_green.distance_from_center((landing_x, landing_y))
-        else:
-            distance_from_hole = None
-
-        # Update the ball's position to landing coordinates
-        ball = Ball()  # This would be a reference to the actual ball object in your game
-        ball.position = (landing_x, landing_y)
-
-        return landing_x, landing_y, distance_from_hole
 
     def block(self, ball):
-        # Get the relative speed of the player (how fast they can move to block the ball)
+        success = False
+        # Calculate the relative speed of the player
         speed = self.stats['Speed'] * random.uniform(0.9, 1.1)
 
-        # Visual Calculus factor
-        # A player with a higher visual calculus will "see" the trajectory better and react faster.
-        visual_calculus_factor = self.stats['Visual Calculus'] / 100.0  # normalize to [0, 1]
-        reaction_time = 1 - visual_calculus_factor  # assuming that a higher visual calculus results in a shorter reaction time
+        # Factor in Visual Calculus
+        visual_calculus_factor = self.stats['Visual Calculus'] / 20.0  # normalized to [0.05, 1]
+        reaction_factor = speed * visual_calculus_factor  # Higher values mean faster reactions
 
-        # Calculate the effective time the player has to block the ball
-        # Assuming the ball's distance from the player and its speed towards the player give a time_to_impact value
-        time_to_impact = distance_from_ball_to_player / ball_speed_towards_player
-        effective_time = time_to_impact - reaction_time
+        # Factor in Solidity and Cowardice for the block success
+        solidity_factor = self.stats['Solidity'] / 20.0
+        cowardice_penalty = self.stats['Cowardice'] / 20.0  # Higher cowardice reduces the player's blocking capability
+        block_factor = solidity_factor * (1 - cowardice_penalty)
 
-        # Player's success at blocking is affected by their solidity and if they flinch (cowardice)
-        solidity_factor = self.stats['Solidity'] / 100.0
-        cowardice_factor = random.uniform(0, 1) * (100 - self.stats['Cowardice']) / 100.0  # higher cowardice reduces this factor
+        # Combine the reaction and block factors to get overall blocking capability
+        overall_block_capability = reaction_factor * block_factor
 
-        block_success_chance = speed * solidity_factor * cowardice_factor * effective_time
-
-        # If the block_success_chance is greater than some threshold, then the block is successful.
-        # Adjust the threshold based on gameplay requirements.
-        BLOCK_THRESHOLD = 0.7
-        if block_success_chance > BLOCK_THRESHOLD:
-            ball.position = self.position  # update the ball's position to be with the blocker
-            return True  # block is successful
-
-        return False  # block failed
-
+        # Determine success based on the overall capability vs. a random threshold (can be adjusted)
+        BLOCK_THRESHOLD = random.uniform(0.5, 1)  # The higher the threshold, the harder it is to block
+        if overall_block_capability > BLOCK_THRESHOLD:
+            ball.position = self.position  # If using a ball class, update the ball's position to be with the blocker
+            success = True  # block is successful
+        if success:
+            print(random.choice([f"Amazing block by the {self.role}!",
+                                 f"{self.role.capitalize()} successfully blocked the ball.",
+                                 f"The ball was stopped in its tracks by the {self.role}."]))
+        else:
+            print(random.choice([f"The {self.role} tried but missed the block.",
+                                 f"Unfortunately, {self.role.capitalize()} couldn't stop the ball.",
+                                 f"{self.role.capitalize()} failed to intercept."]))
+        return success
 
     def aimed_shot(self, greens, players):
-        # Use competitiveness to target a green, similar to the drive method
         num_greens = len(greens)
         greens_probabilities = [1 / float(num_greens)] * num_greens
 
@@ -193,158 +167,98 @@ class Player:
         competitiveness_factor = (self.stats['Competitiveness'] - 10) / 10.0
         greens_probabilities[rival_green - 1] += competitiveness_factor * 0.1
 
+        # Normalize probabilities
+        total = sum(greens_probabilities)
+        greens_probabilities = [p / total for p in greens_probabilities]
+
+        # Adjust for rounding discrepancies
+        discrepancy = 1.0 - sum(greens_probabilities)
+        greens_probabilities[-1] += discrepancy
+
+        # Safety check
+        if not math.isclose(sum(greens_probabilities), 1.0, abs_tol=1e-10):
+            raise ValueError("Probabilities do not sum up to 1.")
+
         chosen_green = np.random.choice(greens, p=greens_probabilities)
 
         # Determine if the player aims for the hole or another player based on savagery
         aim_for_player = random.random() < (self.stats['Savagery'] / 20.0)
 
         if aim_for_player:
-            # Choose a player to target; in a more refined version, this could consider player positions, roles, etc.
+            # Choose a player to target
             targeted_player = random.choice(players)
+            print(random.choice([f"{self.role.capitalize()} is aiming for a player on Green {chosen_green}!",
+                                 f"Watch out! {self.role.capitalize()} has a player in their sights on Green {chosen_green}.",
+                                 f"A sneaky shot aimed at a player on Green {chosen_green} by the {self.role}."]))
 
-            # Targeted position is the position of the chosen player
-            target_x, target_y = targeted_player.position
+            return targeted_player.green_number, aim_for_player
         else:
-            # Targeted position is the hole of the chosen green
-            target_x, target_y = chosen_green.position
-
-        # Calculate deviation from target based on accuracy
-        max_deviation = 10  # Assuming a set max deviation
-        deviation_x = (random.uniform(-1, 1) * (1 - self.stats['Accuracy'] / 20.0) * max_deviation)
-        deviation_y = (random.uniform(-1, 1) * (1 - self.stats['Accuracy'] / 20.0) * max_deviation)
-
-        shot_x = target_x + deviation_x
-        shot_y = target_y + deviation_y
-
-        return shot_x, shot_y, aim_for_player
-
+            print(random.choice([f"{self.role.capitalize()} decided to aim for Green {chosen_green}.",
+                                 f"The ball is flying towards Green {chosen_green}!",
+                                 f"{self.role.capitalize()} has sent the ball towards Green {chosen_green}."]))
+            return chosen_green, aim_for_player
+        
     def save(self, ball):
-        # Speed: how quickly the player can move to intercept the ball
-        speed = self.stats['Speed'] * random.uniform(0.9, 1.1)
+        save_prob = self.calculate_save_probability(ball.speed, ball.direction)
 
-        # Visual Calculus factor
-        visual_calculus_factor = self.stats['Visual Calculus'] / 100.0  # normalize to [0, 1]
-        reaction_time = 1 - visual_calculus_factor  # assuming that a higher visual calculus results in a shorter reaction time
+        if random.random() < save_prob:
+            ball.green_number = self.green_number
+            print(random.choice([f"Stunning save by the {self.role}!",
+                                 f"{self.role.capitalize()} denied that shot with style!",
+                                 f"A top-class save from the {self.role}."]))
+        else:
+            print(random.choice([f"Oh dear, the {self.role} missed the save.",
+                                 f"{self.role.capitalize()} couldn't stop that one.",
+                                 f"The ball got past the {self.role}."]))
 
-        # Calculate the effective time the player has to save the ball
-        time_to_impact = distance_from_ball_to_goal / ball_speed_towards_goal
-        effective_time = time_to_impact - reaction_time
-
-        # Player's success at saving is also affected by their solidity
-        solidity_factor = self.stats['Solidity'] / 100.0
-        
-        # Cowardice factor: do they flinch from the incoming ball?
-        cowardice_factor = random.uniform(0, 1) * (100 - self.stats['Cowardice']) / 100.0
-        
-        # Balance on the sloped green near the hole
-        balance_factor = self.stats['Balance'] / 100.0
-
-        save_success_chance = speed * solidity_factor * cowardice_factor * effective_time * balance_factor
-
-        # If the save_success_chance is greater than some threshold, then the save is successful.
-        # Adjust the threshold based on gameplay requirements.
-        SAVE_THRESHOLD = 0.8
-        if save_success_chance > SAVE_THRESHOLD:
-            ball.position = self.position  # update the ball's position to be with the goalkeeper
-            return True  # save is successful
-
-        # Consider potential of player falling into the hole if balance is bad and they missed the save
-        FALL_THRESHOLD = 0.3
-        if balance_factor < FALL_THRESHOLD and save_success_chance < SAVE_THRESHOLD:
-            # Handle the logic for the player falling into the hole
+        if self.stats['Balance'] < random.random():
+            self.attempt_leap()
             self.fall_into_hole()
 
-        return False  # save failed
+        return False
 
+    def calculate_save_probability(self, ball_speed, ball_direction):
+        speed_factor = self.stats['Speed'] / 100.0
+        reaction_factor = (100 - self.stats['Visual Calculus']) / 100.0
+        solidity_factor = self.stats['Solidity'] / 100.0
+        balance_factor = self.stats['Balance'] / 100.0
 
-    def run_toward_ball(self, ball_position):
-        # Calculate base movement speed
-        speed = self.calculate_speed()
-        direction_to_ball = (ball_position[0] - self.position[0], ball_position[1] - self.position[1])
-        normalized_direction = self.normalize_vector(direction_to_ball)
+        # You can adjust these weights if you want certain factors to be more impactful
+        save_prob = 0.25 * speed_factor + 0.25 * reaction_factor + 0.25 * solidity_factor + 0.25 * balance_factor
 
-        # Factor in balance on the sloped green
-        balance_factor = self.stats['Balance'] / 20.0  # normalize to [0.05, 1]
-        speed *= balance_factor
+        return save_prob
 
-        # Add competitiveness boost
-        competitiveness_boost = (self.stats['Competitiveness'] - 10) / 100.0  # results in [-0.1, 0.1]
-        speed += speed * competitiveness_boost
+    def attempt_leap(self):
+        leap_prob = (self.stats['Speed'] + self.stats['Balance'] + self.stats['Competitiveness']) / 300.0
+        print(f"{self.role.capitalize()} attempts to leap over the hole...")
 
-        # Cap the max speed
-        MAX_SPEED = 20  # Arbitrarily chosen, you can modify based on your needs
-        speed = min(speed, MAX_SPEED)
+        if leap_prob > np.random.rand():
+            print(f"...and makes it!")
 
-        # Calculate the new position after movement
-        delta_x = normalized_direction[0] * speed
-        delta_y = normalized_direction[1] * speed
-        new_position = (self.position[0] + delta_x, self.position[1] + delta_y)
-
-        # Ensure player doesn't overshoot the ball. If the player's next position would place them past the ball, 
-        # set their position to the ball's position.
-        future_distance_to_ball = np.linalg.norm(np.array(new_position) - np.array(ball_position))
-        if future_distance_to_ball < speed:
-            new_position = ball_position
-
-        # Update the player's position
-        self.position = new_position
-
-        return new_position
-
-    def attempt_leap(self, ball_position):
-        danger_zone = 10
-        distance_to_center = np.linalg.norm(np.array(self.position) - np.array(self.center_position))
-        
-        if distance_to_center < danger_zone:
-            leap_distance = (self.stats['Speed'] + self.stats['Balance'] + self.stats['Competitiveness']) / 30
-            
-            if np.linalg.norm(np.array(ball_position) - np.array(self.position)) < danger_zone:
-                direction = np.array(ball_position) - np.array(self.position)
-            else:
-                direction = np.array(self.position) - np.array(self.center_position)
-
-            direction_normalized = direction / np.linalg.norm(direction)
-            new_position = np.array(self.position) + direction_normalized * leap_distance
-
-            success_chance = (self.stats['Visual Calculus'] + self.stats['Balance']) / 20
-
-            if success_chance > np.random.rand():
-                self.position = new_position.tolist()
-                return True  # Successful leap
-
-        return False  # Unsuccessful leap or not in danger zone
+        else:
+            self.fall_into_hole()
 
     def fall_into_hole(self):
-        """Handle the logic when the player falls into the hole."""
-        # This function can be expanded depending on the game mechanics.
-        # For instance, you could deduct points, remove the player from the game for a duration, etc.
-        # As an example:
-        print(f"{self.role} has fallen into the hole!")
-        # Reset player's position to the starting point or a safe point
-        self.position = (0, 0)
+        print(random.choice([f"Oh no! {self.role.capitalize()} fell into a hole.",
+                             f"A misstep! The {self.role} has fallen down.",
+                             f"Disaster! {self.role.capitalize()} is in a hole now."]))
 
     def neoliberal_agenda(self, players):
-        """A function for the 'Neoliberalism' stat, representing a player's ability to 'bribe' others."""
+        bribe_attempt_chance = self.stats['Neoliberalism'] / 20.0
 
-        # Calculate the chance of attempting a bribe based on Neoliberalism stat
-        bribe_attempt_chance = self.stats['Neoliberalism'] / 20.0  # normalized to [0.05, 1]
-
-        # If the player tries to bribe
         if random.random() < bribe_attempt_chance:
-            # Choose a player to try and bribe
             potential_bribe_target = random.choice(players)
+            bribe_resistance = (potential_bribe_target.stats['Integrity'] + potential_bribe_target.stats['Competitiveness']) / 40.0
 
-            # Calculate the target player's resistance to bribery based on Integrity and Competitiveness
-            bribe_resistance = (potential_bribe_target.stats['Integrity'] + potential_bribe_target.stats['Competitiveness']) / 40.0  # normalized to [0.1, 2]
-
-            # If the bribe attempt surpasses the resistance
             if bribe_attempt_chance / bribe_resistance > random.random():
-                # Reduce the bribed player's stats temporarily. Mechanism of how and when to restore them to be determined.
                 for stat, value in potential_bribe_target.stats.items():
-                    potential_bribe_target.stats[stat] = int(value * 0.9)  # Reducing each stat by 10%
-
-                print(f"{self.role} has successfully bribed {potential_bribe_target.role}!")
+                    potential_bribe_target.stats[stat] = int(value * 0.9)
+                print(random.choice([f"{self.role.capitalize()} is trying to bribe the other players.",
+                                 f"Looks like {self.role} has some tricks up their sleeve!",
+                                 f"Watch out! The {self.role} is attempting to influence the game."]))
             else:
-                print(f"{potential_bribe_target.role} resisted the bribe from {self.role}!")
+                print(random.choice([f"{self.role.capitalize()} is playing it fair and square.",
+                                 f"No shady business from the {self.role} today.",
+                                 f"{self.role.capitalize()} believes in a fair game."]))
         else:
             print(f"{self.role} chose not to bribe another player.")

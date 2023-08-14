@@ -1,84 +1,69 @@
-from models.ball import Ball
+import numpy as np
 from models.player import Player
-from models.team import Team
 from models.green import Green
-import time
+from models.team import Team
+import random
 
-# Define game states
-class GameState:
-    INITIALIZING = 1
-    RUNNING = 2
-    ENDED = 3
+class GameLogic:
+    def __init__(self):
+        # Initialize two teams of players (for simplicity, each team has one of each role)
+        self.team_A = [Player(role="driver"), Player(role="marksman"), Player(role="blocker"), Player(role="goalie")]
+        self.team_B = [Player(role="driver"), Player(role="marksman"), Player(role="blocker"), Player(role="goalie")]
+        self.ball_position = (0, 0)
+        self.turns = 20  # Play for 20 turns for simplicity
 
-# Game events
-class GameEvent:
-    OUT_OF_BOUNDS = 1
-    NEXT_BALL = 2
+    def play_turn(self, player):
+        # Check if the player wants to go for the ball
+        if player.should_go_for_ball(self.ball_position):
+            # Decide the action based on the player's role
+            if player.role == "driver":
+                target_green = player.select_green()
+                # Simulate the drive
+                result_green = player.drive(target_green, player.green_number)
+                if result_green:
+                    self.ball_position = (result_green, 0)
+                else:
+                    # Ball does not land on any green
+                    self.ball_position = (-1, -1)
 
-def handle_event(event, *args):
-    """Handle different game events."""
-    if event == GameEvent.OUT_OF_BOUNDS:
-        # Placeholder for out-of-bounds logic
-        pass
-    elif event == GameEvent.NEXT_BALL:
-        # Magic happens
-        pass
-    # ... add more event handling as necessary ...
+            elif player.role == "marksman":
+                chosen_green, aim_for_player = player.aimed_shot(list(range(1, 9)), self.team_A + self.team_B)
+                if aim_for_player:
+                    # The ball position remains the same, but a player is potentially hit
+                    hit_player = next(p for p in (self.team_A + self.team_B) if p.green_number == chosen_green)
+                    hit_player.green_number = 0  # The player is hit and sent to a penalty green
+                else:
+                    self.ball_position = (chosen_green, 0)
 
-def run_simulation():
-    """Main function to run the ball simulation game."""
+            elif player.role == "blocker":
+                if player.block(self.ball_position):
+                    # Successful block, ball's position remains the same but is with the blocker
+                    self.ball_position = player.position
 
-    # Initialization
-    state = GameState.INITIALIZING
-    ball_counter = 0
-    total_balls = 20
-    current_ball = None
+            elif player.role == "goalie":
+                if not player.save(self.ball_position):
+                    # Goalie failed to save, ball remains in its position and goalie may fall into a hole
+                    if random.random() > player.calculate_save_probability(0, 0):  # Using dummy values for speed and direction for now
+                        player.fall_into_hole()
 
-    # Define field bounds (for ball-wall collision). Adjust values as required.
-    x1, y1, x2, y2 = 0, 0, 100, 100
+            player.neoliberal_agenda(self.team_A + self.team_B)
 
-    # Initialize greens and teams
-    greens = [Green() for _ in range(8)]
-    teams = [Team(f'Team {i+1}') for i in range(8)]
-    green_team_map = {greens[i]: teams[i] for i in range(8)}
+    def play_game(self):
+        for turn in range(self.turns):
+            print(f"\nTurn {turn + 1}:")
 
-    # Main game loop
-    while state != GameState.ENDED:
-        if current_ball is None or any(green.ball_out_of_play(current_ball) for green in greens):
-            if ball_counter < total_balls:
-                ball_counter += 1
-                current_ball = Ball(...)  # Initialize new ball with required parameters
-            else:
-                state = GameState.ENDED
-                continue
+            # Players from team A take their turns
+            for player in self.team_A:
+                self.play_turn(player)
 
-        for green in greens:
-            # Check if ball lands on this green
-            if green.ball_on_green(current_ball):
-                active_team = green_team_map[green]
-                break
+            # Players from team B take their turns
+            for player in self.team_B:
+                self.play_turn(player)
 
-        # Check for wall collisions
-        x1, y1, x2, y2 = green.bounds
-        current_ball.collide_with_wall(x1, y1, x2, y2)
-        
-        # Check for game events
-        out_of_bounds = any(green.is_out_of_bounds(current_ball.position) for green in greens)
+            # At the end of each turn, you can calculate scores, display stats, or make other game-related decisions
 
-        if out_of_bounds:
-            handle_event(GameEvent.OUT_OF_BOUNDS)
+        print("\nGame Over!")
 
-        # Update game state based on events or other logic
-        if state == GameState.RUNNING:
-            current_ball.move(delta_time)
-            
-            for player in active_team.players.values():
-                player.take_action(current_ball)  # Assuming take_action requires current_ball as a parameter
-
-        # Sleep for a bit before next iteration
-        time.sleep(delta_time)
-
-    # End of game logic (display results, cleanup, etc.)
-
-if __name__ == "__main__":
-    run_simulation()
+# To play the game
+game = GameLogic()
+game.play_game()

@@ -1,9 +1,43 @@
-    Result of Player Actions: As mentioned earlier, the outcome of actions like drive or aimed_shot isn't specified. Depending on your game's rules, you'll need to define what happens after these actions are taken. Does the ball move? If so, how far and in which direction? Does it affect other players?
+utput/Logging:
 
-    Team Interactions: How will teams interact with each other during the game? Will they take turns? Will there be simultaneous movements? This is something to consider as you expand the game logic.
+    Throughout the player logic, there is very little output/logging to indicate what's happening. Adding print statements or some form of logging can help you trace what's going on during a game turn. For example, in the drive method, you can print out whether the drive was successful or if it failed due to power or accuracy.
 
-    More Comprehensive Ball Physics: You might want to model the ball's movement more comprehensively, especially if the ball can bounce, roll off the green, or interact with players in various ways.
+Player Movement:
 
-    Events or Game States: Depending on how complex you want the game to be, you might introduce different game states or events. For example, what happens when a goal is scored? Is there a penalty system? What if players collide?
+    While I see methods for different actions like driving, saving, and aiming shots, there doesn't appear to be a method for moving the player on the field. Unless this logic is in another class or method, players won't change positions. This might be one reason why you only see the turn counter in the output.
 
-    Enhanced UI/Display: While this is a backend model, eventually, you might want to develop a user interface for the game. This could be text-based, where game states are printed out, or graphical, using libraries like Pygame or even more complex engines.
+Aimed Shot:
+
+    In the aimed_shot method, when you're targeting a player, you're returning the green number of that targeted player. This could be confusing since the aim was for a player and not for the green. To be more semantically clear, consider returning the player object or some identifier of the player.
+
+Fall Into Hole:
+
+    The fall_into_hole method sets the player's green number to 0. You might want to ensure that the rest of your logic can handle a green number of 0. Also, it might be more semantically appropriate to use a value like None or a special constant to indicate that a player isn't on any green.
+
+Neoliberal Agenda:
+
+    The neoliberal_agenda method reduces the stats of a bribed player by 10%. This method seems to only produce output when the bribing player chooses to bribe and not for any subsequent actions. Consider adding print statements to indicate when a player's stats have been reduced.
+
+Code Structure:
+
+    While each method seems fine on its own, the coherence of these methods as a complete game logic is dependent on how they are orchestrated in the game_logic.py. For example, players might be making aimed shots, but if the ball's position isn't updated in the game logic, the game will remain static.
+
+    Green: It looks like you've designed a Green class, but it's not implemented in the provided code. The Green could store more complex data, like rough patches, water hazards, or sand bunkers, which could affect gameplay.
+
+    Team: The Team class is also not shown in the provided code, but I assume it will be a collection of players and might hold team-wide stats or abilities.
+
+    Ball Dynamics: Right now, the ball position is a tuple, and it seems there's no direct logic for ball speed and direction. Implementing more dynamics can add depth to the game. For instance, when a ball moves, you can also determine its speed and direction, affecting the next player's actions or chances to interact with the ball.
+
+    Game End Condition: The game currently ends after a fixed number of turns. You can introduce other end conditions such as a score limit, a certain event, or specific conditions being met.
+
+    Game Feedback: It would be beneficial for the user if there's feedback after every turn, summarizing what happened, such as who did what, where the ball landed, and any other key events.
+
+    Expand on Player Actions: Consider expanding on the actions a player can take, such as:
+        Allowing the player to decide which action they want to take instead of being fixed based on their role.
+        Introducing more strategy where the order of actions can be decided at the beginning of a turn.
+
+    Additional Interactions: The neoliberal_agenda function is a fun addition, but you might want to clarify its effects (e.g., what does bribing do? Does it prevent a player from acting on their turn? Does it reduce their stats only temporarily or for the rest of the game?).
+
+    Expand Teams: Right now, you have two teams with set roles. You can allow the creation of custom teams with players of varying roles. This can add a strategic component where team composition can be crucial.
+
+    Advanced AI: In future iterations, you can also introduce an AI opponent with varying levels of difficulty.
