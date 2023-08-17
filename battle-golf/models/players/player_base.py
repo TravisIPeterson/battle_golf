@@ -1,5 +1,8 @@
 import random
 import numpy as np
+from .actions.offensive_actions import OffensiveActions
+from .actions.defensive_actions import DefensiveActions
+from .actions.miscellaneous_actions import MiscellaneousActions
 
 class Player:
     MAX_SPEED = 20  # Maximum speed a player can achieve

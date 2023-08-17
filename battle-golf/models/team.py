@@ -1,5 +1,5 @@
 import json
-from .player import Player
+from .players.player_base import Player
 
 class Team:
     def __init__(self, team_name, players=None):

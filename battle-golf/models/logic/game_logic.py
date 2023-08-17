@@ -1,8 +1,11 @@
-import numpy as np
-from models.player import Player
+import random
+
+from models.players.player_base import Player
+from models.players.actions.defensive_actions import DefensiveActions
+from models.players.actions.miscellaneous_actions import MiscellaneousActions
+from models.players.actions.offensive_actions import OffensiveActions
 from models.green import Green
 from models.team import Team
-import random
 
 class GameLogic:
     def __init__(self):
@@ -14,6 +17,7 @@ class GameLogic:
         self.ball_green_number = 1  # Starting ball position on Green 1
         self.turns = 20  # Play for 20 turns for simplicity
         self.all_greens = list(range(1, 9))
+        self.action_history = []
 
     def get_team_on_green(self, green_number):
         for team in self.teams:
@@ -21,34 +25,12 @@ class GameLogic:
                 return team
         return None
 
-    def play_turn(self, player, ball_pursuers):
-        print(f"{player.role} is starting their turn.")
-        # Check if the player wants to go for the ball
-        pursuing = player.should_go_for_ball(self.ball_green_number, len(ball_pursuers))
-        if pursuing:
-            ball_pursuers.append(player)
-
-            if player.role == "blocker":
-                if player.block(self.ball_green_number):
-                    # Successful block, ball's position remains the same but is with the blocker
-                    print(f"{player.role} from Team {player.team_name} blocked the ball. Ball is now on Green {self.ball_green_number}")  # Debugging line
-            
-            elif player.role == "marksman":
-                all_players = [p for team in self.teams for p in team.players.values()]
-                chosen_green, aim_for_player = player.aimed_shot(list(range(1, 9)), all_players)
-                if aim_for_player:
-                    assert all(p.green_number != 0 for p in all_players)
-                    hit_player = next(p for p in all_players if p.green_number == chosen_green)
-                else:
-                    self.ball_green_number = chosen_green
-
-            elif player.role == "goalie":
-                if not player.save():
-                    if random.random() > player.calculate_save_probability(0, 0):
-                        player.fall_into_hole()
-
-            all_players = [player for team in self.teams for player in team.players.values()]
-            player.neoliberal_agenda(all_players)
+    def play_turn(self, players):
+        available_actions = self.determine_available_actions
+        chosen_action = random.choice(available_actions)
+        acting_player = self.select_player_for_action(chosen_action)
+        getattr(acting_player, chosen_action)()
+        self.action_history.append((acting_player, chosen_action))
 
     def play_game(self):
         for turn in range(self.turns):
