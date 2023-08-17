@@ -14,7 +14,10 @@ class GameState:
     SAVE = "save"
 
     transitions = {
-        AIMED_SHOT: [ATTEMPT_LEAP, BLOCK, SAVE],
+        AIMED_SHOT: {
+            'success': {ATTEMPT_LEAP, BLOCK, SAVE}, #this should also prompt the green to be changed
+            'fail': {} # will need a method for drive failures, likely resulting in a foul of some sort for the ball dropping into the sand pit
+        },
         ATTEMPT_LEAP: [FALL_INTO_HOLE, SAVE],
         DRIVE: [BLOCK, NEOLIBERAL_AGENDA, SAVE],
         FALL_INTO_HOLE: [AIMED_SHOT, DRIVE, NEOLIBERAL_AGENDA],

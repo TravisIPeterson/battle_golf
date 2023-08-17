@@ -2,8 +2,9 @@ import json
 from .players.player_base import Player
 
 class Team:
-    def __init__(self, team_name, players=None):
+    def __init__(self, team_name, green_number, players=None):
         self.team_name = team_name
+        self.green_number = green_number
         default_roles = ['Driver', 'Blocker', 'Marksman', 'Goalie']
         if players:
             self.players = players

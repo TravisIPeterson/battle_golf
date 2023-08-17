@@ -4,33 +4,41 @@ from models.players.player_base import Player
 from models.players.actions.defensive_actions import DefensiveActions
 from models.players.actions.miscellaneous_actions import MiscellaneousActions
 from models.players.actions.offensive_actions import OffensiveActions
-from models.green import Green
 from models.team import Team
+from .game_state import GameState
+
+TOTAL_TEAMS = 8
+TOTAL_TURNS = 20
 
 class GameLogic:
+
     def __init__(self):
-        # Initialize 8 teams and distribute them across 8 greens
-        self.teams = [Team(i+1) for i in range(8)]
+        self.initialize_game()
+        self.game_state = GameState()
+
+    def initialize_game(self):
+        self.teams = [Team(i + 1) for i in range (TOTAL_TEAMS)]
         for i, team in enumerate(self.teams):
-            team.players['Driver'].green_number = i + 1
-            
-        self.ball_green_number = 1  # Starting ball position on Green 1
-        self.turns = 20  # Play for 20 turns for simplicity
-        self.all_greens = list(range(1, 9))
-        self.action_history = []
+            team.players['Drivers'].green_number = i + 1
+
+        self.ball_green_number = random.randint(1..8)
+        self.turns = TOTAL_TURNS
+        self.all_greens = list(range(1, TOTAL_TEAMS +1))
 
     def get_team_on_green(self, green_number):
-        for team in self.teams:
-            if team.players['Driver'].green_number == green_number:  # Using the Driver as a reference, assuming all team members are on the same green
-                return team
-        return None
+        return self.team.green_number == green_number
 
     def play_turn(self, players):
-        available_actions = self.determine_available_actions
+        available_actions = self.game_state.available_actions
         chosen_action = random.choice(available_actions)
         acting_player = self.select_player_for_action(chosen_action)
-        getattr(acting_player, chosen_action)()
-        self.action_history.append((acting_player, chosen_action))
+        action_method = getattr(acting_player, chosen_action, None)
+
+        if action_method and callable(action_method):
+            action_method()
+            self.game_state.perform_transition(chosen_action)
+        else:
+            print(f"Error: '{chosen_action}' is not a valid action for {acting_player}.")
 
     def play_game(self):
         for turn in range(self.turns):
