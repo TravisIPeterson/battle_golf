@@ -1,10 +1,11 @@
 import random
 
-first_names = ['Scoot', 'Crime', 'Hoss', 'Benjamina', 'Breery', 'Kermit', 'Horse', 'Scout', 'Jimothy', 'Kimothy', 'Vera', 'Hades', 'Georgio', 'Jordi', 'Athena', 'Cordelia', 'William']
+first_names = ['Scoot', 'Crime', 'Hoss', 'Benjamina', 'Breery', 'Kermit', 'Horse', 'Scout', 'Jimothy', 'Kimothy', 'Vera', 'Hades', 'Georgio', 'Jordi', 'Athena', 'Cordelia', 'William', 'Sherman']
 last_names = ['McGee', 'McGoo', 'McGuffin', 'Briner', 'Brelinda', 'Manman', 'Mann', 'Mannly', 'Mannman', 'Mannwoman', 'Mannchild', 'Aaronson', 'Badly', 'Baddington', 'Broomhilda', 'Watkins']
               
 class Player:
     def __init__(self, position):
+        self.name = self.generate_name
         self.position = position
         self.stats = {
             'Power': random.uniform(1.0, 10.0),
