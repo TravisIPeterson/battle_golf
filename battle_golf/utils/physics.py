@@ -62,7 +62,7 @@ class PhysicsEngine:
 
     def apply_bounce(self, velocity, ground_angle):
         # Apply the effect of a bounce on the ball's velocity
-        return -velocity * math.sin(ground_angle)
+        return velocity * -math.cos(ground_angle)
 
     def apply_roll(self, position, ground_angle):
         # Apply the effect of rolling on the ball's position
