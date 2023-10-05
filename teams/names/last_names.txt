@@ -16,6 +16,7 @@ Hickey
 Hickory
 Inland
 Jones
+Klotz
 Kramer
 Lefty
 Love
@@ -37,8 +38,10 @@ Pig
 Pit
 Quiz
 Roberts
-Shadowheart
+Shadowblade
 Simms
+Thornwhip
+Thunder
 Tofu
 Union
 Venezuela

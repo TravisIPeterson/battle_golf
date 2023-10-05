@@ -1,6 +1,7 @@
 A
 Billy
 Captain
+Dean
 Detroit
 Dorothy
 Dorothea
@@ -8,6 +9,7 @@ Edith
 Fernando
 Gonzo
 Gregory
+Grouch
 Hick
 Hickey
 Hickman
@@ -29,6 +31,7 @@ Monty
 Mr.
 Mystery
 Nando
+Nico
 Orion
 Phi
 Pimento
@@ -36,6 +39,7 @@ Pig
 Quentin
 Rocky
 Roger
+Sam
 Scoot
 Scruff
 Stank
@@ -51,3 +55,4 @@ Waltzing
 Xavier
 Yolanda
 Zeremy
+Zeus
