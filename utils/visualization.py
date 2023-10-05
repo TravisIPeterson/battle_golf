@@ -4,12 +4,13 @@ import math
 sys.path.append('..')
 from entities.green import Green
 from entities.ball import Ball
+from utils.constants import *
 
 # Initialize Pygame
 pygame.init()
 
 # Set up the window
-screen = pygame.display.set_mode((1920, 1080))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('My Game')
 
 # Set up the clock
@@ -18,7 +19,7 @@ clock = pygame.time.Clock()
 # Calculate the positions of the greens in a circle
 num_greens = 8
 radius = 400
-center = (960, 510)
+center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 angle_step = 2 * math.pi / num_greens
 
 greens = []
@@ -48,12 +49,12 @@ while True:
             sys.exit()
 
     # Clear the screen
-    screen.fill((50, 50, 50))
+    screen.fill(SKY_COLOR)
 
     # Draw the greens
     for green in greens:
-        pygame.draw.circle(screen, (0, 255, 70), (int(green.x), int(green.y)), int(green.radius))
-        pygame.draw.circle(screen, (0, 0, 0), (int(green.hole_x), int(green.hole_y)), int(green.radius * 0.015))
+        pygame.draw.circle(screen, GREEN_COLOR, (int(green.x), int(green.y)), int(green.radius))
+        pygame.draw.circle(screen, BLACK_COLOR, (int(green.hole_x), int(green.hole_y)), int(green.radius * 0.015))
 
     # Update the ball object
     ball.update(greens)
@@ -84,13 +85,45 @@ while True:
     # Draw the border around the cursor
     pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(cursor_pos[0] - FIELD_SIZE // 2 - 1, cursor_pos[1] - FIELD_SIZE // 2 - 1, FIELD_SIZE + 2, FIELD_SIZE + 2), 1)
 
+    # Draw the wind direction and speed indicator
+    wind_speed_text = FONT.render(str(round(ball.wind.speed)), True, TEXT_COLOR)
+    screen.blit(wind_speed_text, (SCREEN_WIDTH - 50, SCREEN_HEIGHT - 50))
+
+    # Map wind direction to arrow rotation
+    direction_angles = {
+        "N": 0,
+        "NE": 45,
+        "E": 90,
+        "SE": 135,
+        "S": 180,
+        "SW": 225,
+        "W": 270,
+        "NW": 315
+    }
+    angle = direction_angles[ball.wind.direction]
+
+    # Create a new surface for the wind direction arrow
+    wind_direction_arrow = pygame.Surface((50, 50), pygame.SRCALPHA)
+
+    # Draw the arrow shape on the wind direction arrow surface
+    pygame.draw.polygon(wind_direction_arrow, TEXT_COLOR, [(25, 5), (5, 45), (25, 35), (45, 45)], 0)
+
+    # Rotate the wind direction arrow surface by the wind direction angle
+    rotated_arrow = pygame.transform.rotate(wind_direction_arrow, -angle)
+
+    # Blit the wind direction arrow onto the screen
+    arrow_pos = (SCREEN_WIDTH - 75, SCREEN_HEIGHT - 225)
+    screen.blit(rotated_arrow, arrow_pos)
+
+    # Display the direction text below the arrow
+    direction_text = FONT.render(ball.wind.direction, True, TEXT_COLOR)
+    screen.blit(direction_text, (SCREEN_WIDTH - 65, SCREEN_HEIGHT - 180))
+
+
     # Update the screen
     pygame.display.flip()
 
     # Limit the frame rate
     clock.tick(60)
 
-    print(ball.x, ball.y, ball.z, ball.velocity, ball.on_green, ball.green, ball.last_team)
-    
-    if ball.on_green:
-        print(ball.green.team)
+    print(ball.wind.speed, ball.wind.direction)
