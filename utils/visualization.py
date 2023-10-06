@@ -1,10 +1,19 @@
 import pygame
 import sys
 import math
+import random
 sys.path.append('..')
 from entities.green import Green
 from entities.ball import Ball
 from utils.constants import *
+from entities.wall import Wall
+
+def random_point_inside_circle(cx, cy, r):
+    theta = random.uniform(0, 2 * math.pi)  # Random angle
+    distance_from_center = random.uniform(0, r)  # Random distance from center
+    x = cx + distance_from_center * math.cos(theta)
+    y = cy + distance_from_center * math.sin(theta)
+    return x, y
 
 # Initialize Pygame
 pygame.init()
@@ -37,10 +46,18 @@ ZOOM_LEVEL = 3
 # Define the color of the border
 BORDER_COLOR = (255, 255, 255)
 
-# Create the ball object
-ball = Ball(500, 500, 2)
+# Create the Wall object
+wall = Wall(greens)
 
-# Game loop
+# Create the Ball object
+center_x, center_y = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
+safe_radius = wall.radius * 0.9
+start_x, start_y = random_point_inside_circle(center_x, center_y, safe_radius)
+ball = Ball(start_x, start_y, 2, wall)
+distance_to_wall_center = math.sqrt((ball.x - wall.x)**2 + (ball.y - wall.y)**2)
+print(f"Ball's position: ({ball.x}, {ball.y}), Distance to wall's center: {distance_to_wall_center}")
+
+#s Game loop
 while True:
     # Handle events
     for event in pygame.event.get():
@@ -61,6 +78,9 @@ while True:
 
     # Draw the ball object
     ball.draw(screen)
+
+    # Draw the wall
+    wall.draw(screen)
 
     # Get the position of the cursor
     cursor_pos = pygame.mouse.get_pos()
@@ -125,5 +145,3 @@ while True:
 
     # Limit the frame rate
     clock.tick(60)
-
-    print(ball.wind.speed, ball.wind.direction)
