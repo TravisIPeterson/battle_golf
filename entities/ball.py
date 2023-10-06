@@ -1,22 +1,53 @@
 import pygame
 import math
+import random
+from entities.wind import Wind
 
 class Ball:
     def __init__(self, x, y, radius):
         self.x = x
         self.y = y
-        self.z = 0  # Adding the z-coordinate for height
+        self.z = 0
         self.radius = radius
-        self.velocity = [1, 1, 10]  # Added a z-velocity
+        self.velocity = [1, 1, 10]
         self.on_green = False
         self.green = None
         self.last_team = None
+        self.time_in_air = 0
+        self.wind = Wind()
+        self.time_on_ground = 0
 
     def update(self, greens):
+
         # Update the position of the ball based on its velocity
+        self.wind.update()
+        
+        # Calculate wind effect based on height (z value) of the ball
+        # Assuming the ball's max height can be 100 for full effect; adjust this value as necessary
+        max_height_for_full_effect = 100
+        wind_effect_multiplier = self.z / max_height_for_full_effect
+        wind_effect = self.wind.effect_on_ball(wind_effect_multiplier)
+        wind_effect = [wind_effect[0] * 0.2, wind_effect[1]]  # Reduce the effect of the wind
+            
+        # Convert wind direction to x, y velocity components based on compass direction
+        wind_effects = {
+            "N": (0, -wind_effect[0]),
+            "S": (0, wind_effect[0]),
+            "E": (wind_effect[0], 0),
+            "W": (-wind_effect[0], 0),
+            "NE": (wind_effect[0]/math.sqrt(2), -wind_effect[0]/math.sqrt(2)),
+            "NW": (-wind_effect[0]/math.sqrt(2), -wind_effect[0]/math.sqrt(2)),
+            "SE": (wind_effect[0]/math.sqrt(2), wind_effect[0]/math.sqrt(2)),
+            "SW": (-wind_effect[0]/math.sqrt(2), wind_effect[0]/math.sqrt(2)),
+        }
+        
+        self.velocity[0] += wind_effects[self.wind.direction][0]
+        self.velocity[1] += wind_effects[self.wind.direction][1]
         self.x += self.velocity[0]
         self.y += self.velocity[1]
         self.z += self.velocity[2]
+
+        self.calculate_air_time()
 
         # Apply gravity when the ball is in the air
         if self.z > 0:
@@ -57,6 +88,21 @@ class Ball:
             self.velocity[0] = -self.velocity[0]
         if self.y - self.radius < 0 or self.y + self.radius > 1080:
             self.velocity[1] = -self.velocity[1]
+
+        if self.z == 0:
+            self.time_on_ground += 1
+        
+        if self.time_on_ground > 100:
+            self.velocity[0] = random.uniform(-3, 3)
+            self.velocity[1] = random.uniform(-3, 3)
+            self.velocity[2] = random.uniform(0, 10)
+            self.time_on_ground = 0
+    
+    def calculate_air_time(self):
+        if self.z > 0:
+            self.time_in_air += 1
+        else:
+            self.time_in_air = 0
 
     def draw(self, surface):
         # Adjust the radius of the ball based on its z value using a linear factor and a slight curve.
