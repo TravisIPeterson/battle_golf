@@ -3,12 +3,13 @@ import random
 import string
 
 class Player:
-    def __init__(self, position, name=None, gender=None, accuracy=None, balance=None, charisma=None,
+    def __init__(self, position, name=None, initials=None, gender=None, accuracy=None, balance=None, charisma=None,
                  competitiveness=None, cowardice=None, dramatic_flair=None, goutiness=None,
-                 greed=None, integrity=None, metabolism = None, neoliberalism=None, power=None, savagery=None,
+                 greed=None, integrity=None, intelligence=None, metabolism = None, neoliberalism=None, power=None, savagery=None,
                  solidity=None, speed=None, stamina=None, visual_calculus=None):
         self.position = position
         self.name = name or self.generate_name()
+        self.initials = initials or ''.join([word[0] for word in self.name.split(' ')])
         self.gender = gender or self.invent_gender()
         self.accuracy = round(accuracy or random.uniform(1.0, 10.0), 2)
         self.balance = round(balance or random.uniform(1.0, 10.0), 2)
@@ -19,6 +20,7 @@ class Player:
         self.goutiness = round(goutiness or random.uniform(1.0, 10.0), 2)
         self.greed = round(greed or random.uniform(1.0, 10.0), 2)
         self.integrity = round(integrity or random.uniform(1.0, 10.0), 2)
+        self.intelligence = round(intelligence or random.uniform(1.0, 10.0), 2)
         self.metabolism = round(metabolism or random.uniform(1.0, 10.0), 2)
         self.neoliberalism = round(neoliberalism or random.uniform(1.0, 10.0), 2)
         self.power = round(power or random.uniform(1.0, 10.0), 2)
@@ -27,7 +29,7 @@ class Player:
         self.speed = round(speed or random.uniform(1.0, 10.0), 2)
         self.stamina = round(stamina or random.uniform(1.0, 10.0), 2)
         self.visual_calculus = round(visual_calculus or random.uniform(1.0, 10.0), 2)
-        self.weighted_stats(position, self.accuracy, self.balance, self.charisma, self.competitiveness, self.cowardice, self.dramatic_flair, self.goutiness, self.greed, self.integrity, self.metabolism, self.neoliberalism, self.power, self.savagery, self.solidity, self.speed, self.stamina, self.visual_calculus)
+        self.weighted_stats(position, self.accuracy, self.balance, self.charisma, self.competitiveness, self.cowardice, self.dramatic_flair, self.goutiness, self.greed, self.integrity, self.intelligence, self.metabolism, self.neoliberalism, self.power, self.savagery, self.solidity, self.speed, self.stamina, self.visual_calculus)
 
     def generate_name(self):
         with open('names/first_names.txt') as f:
@@ -48,7 +50,7 @@ class Player:
 
         return gender
 
-    def weighted_stats(self, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, visual_calculus):
+    def weighted_stats(self, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, visual_calculus):
         if position == 'driver':
             accuracy *= random.uniform(1.0, 1.3)
             power *= random.uniform(1.0, 1.7)
@@ -111,6 +113,7 @@ class Database:
                 id INTEGER PRIMARY KEY,
                 team_id INTEGER,
                 name TEXT,
+                initials TEXT,
                 gender TEXT,
                 position TEXT,
                 power REAL,
@@ -123,6 +126,7 @@ class Database:
                 goutiness REAL,
                 greed REAL,
                 integrity REAL,
+                intelligence REAL,
                 metabolism REAL,
                 neoliberalism REAL,
                 savagery REAL,
@@ -139,7 +143,7 @@ class Database:
         team_id = self.cursor.lastrowid
 
         for player in team.players:
-            self.cursor.execute('INSERT INTO players (team_id, name, gender, position, power, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, metabolism, neoliberalism, savagery, solidity, speed, stamina, visual_calculus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (team_id, player.name, player.gender, player.position, player.power, player.accuracy, player.balance, player.charisma, player.competitiveness, player.cowardice, player.dramatic_flair, player.goutiness, player.greed, player.integrity, player.metabolism, player.neoliberalism, player.savagery, player.solidity, player.speed, player.stamina, player.visual_calculus))
+            self.cursor.execute('INSERT INTO players (team_id, name, initials, gender, position, power, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, savagery, solidity, speed, stamina, visual_calculus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (team_id, player.name, player.initials, player.gender, player.position, player.power, player.accuracy, player.balance, player.charisma, player.competitiveness, player.cowardice, player.dramatic_flair, player.goutiness, player.greed, player.integrity, player.intelligence, player.metabolism, player.neoliberalism, player.savagery, player.solidity, player.speed, player.stamina, player.visual_calculus))
 
         self.conn.commit()
 
