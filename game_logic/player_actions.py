@@ -1,7 +1,9 @@
 import random
 
-def get_possible_actions(balls, players):
-    actions = {}
+non_caddy_actions = ['block', 'drive', 'hit', 'idle', 'movement', 'pass_ball', 'precision_hit']
+
+def choose_action(balls, players):
+    action_determiner = random.randint(1, 100)
     for player in players:
         
         # Choose which ball to focus on
@@ -10,29 +12,58 @@ def get_possible_actions(balls, players):
         position = player.position
         proximity = distance(player.position, ball.position)
         # Determine the possible actions for the player based on their position and proximity
-        possible_actions = []
+        chosen_action = ''
         if player.position != 'caddy':
             if proximity < 1:
                 if position == 'driver':
-                    possible_actions.append('drive')
-                    possible_actions.append('precision_hit')
-                    possible_actions.append('pass_ball')
+                    if action_determiner <= 40:
+                        chosen_action= 'drive'
+                    elif action_determiner <= 50:
+                        chosen_action= 'precision_hit'
+                    elif action_determiner <= 90:
+                        chosen_action = 'hit'
+                    else:
+                        chosen_action = random.choice(non_caddy_actions)
                 elif position == 'blocker':
-                    possible_actions.append('block')
-                    possible_actions.append('hit')
-                    possible_actions.append('pass_ball')
+                    if action_determiner <= 40:
+                        chosen_action = 'block'
+                    elif action_determiner <= 50:
+                        chosen_action = 'hit'
+                    elif action_determiner <= 90:
+                        chosen_action = 'pass_ball'
+                    else:
+                        chosen_action = random.choice(non_caddy_actions)
                 elif position == 'marksman':
-                    possible_actions.append('precision_hit')
-                    possible_actions.append('pass_ball')
+                    if action_determiner <= 70:
+                        chosen_action = 'precision_hit'
+                    elif action_determiner <= 80:
+                        chosen_action = 'hit'
+                    elif action_determiner <= 90:
+                        chosen_action = 'pass_ball'
+                    else:
+                        chosen_action = random.choice(non_caddy_actions)
                 else:
-                    possible_actions.append('pass_ball')
+                    if action_determiner <= 95:
+                        chosen_action = 'block'
+                    else:
+                        chosen_action = random.choice(non_caddy_actions)
             else:
-                possible_actions.append('pursue_ball')
-                possible_actions.append('hit')
-            actions[player] = possible_actions
+                chosen_action = 'pursue_ball'
         else:
-            actions[player] = ['idle']
-    return actions
+            if proximity < 10:
+                chosen_action = 'flee_ball''
+            else:
+                if action_determiner <= 90:
+                    chosen_action = 'idle'
+                elif action_determiner <= 92:
+                    chosen_action = 'offer_bribe'
+                else:
+                    chosen_action = 'hit'
+        
+        # Call the chosen action function with the player and ball objects as arguments to ensure ball focus does not change
+        if chosen_action:
+            action_function = globals()[chosen_action]
+            action_function(player, ball)
 
 def choose_ball(balls, players, player):
     # Determine which ball the player should focus on
@@ -54,27 +85,29 @@ def choose_ball(balls, players, player):
         best_ball = random.choice(same_score_balls)
     return best_ball
 
-def block(player):
-    if player.position == 'blocker':
-        success_prob = (player.balance + player.power + player.solidity) / 30.0
-    else:
-        success_prob = (player.balance + player.power + player.solidity) / 60.0
-    return random.random() < success_prob
-
-def dive(player):
-    success_prob = (player.speed + player.balance + player.solidity) / 30.0
-    return random.random() < success_prob
-
 def distance(pos1, pos2):
     # Calculate the distance between two positions
     return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
 
-def drive(player):
-    if player.position == 'driver':
-        success_prob = (player.power + player.accuracy) / 20.0
+def block(player, ball):
+    success_prob = (player.balance + player.power + player.solidity)
+    if random.randint(0, 20) < success_prob:
+        ball.position = player.position
+        ball.speed = 0
+        ball.direction = 0
+
+# def dive(player):
+#    success_prob = (player.speed + player.balance + player.solidity)
+#    return random.random() < success_prob
+
+def drive(player, ball):
+    success_prob = player.competitiveness + player.visual_calculus - abs(ball.velocity[0]) - abs(ball.velocity[1])
+    if random.randint(0, 7) < success_prob:
+        ball.velocity[0] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
+        ball.velocity[1] += (player.power + player.accuracy)* random.uniform(0.5, 1.5)
+        ball.velocity[2] += player.power * random.uniform(0.5, 1.5)
     else:
-        success_prob = (player.power + player.accuracy) / 40.0
-    return random.random() < success_prob
+        print('drive failed')
 
 def hit(player):
     success_prob = (player.power + player.savagery) / 20.0
