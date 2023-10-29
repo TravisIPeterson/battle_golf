@@ -3,6 +3,7 @@ import random
 def get_possible_actions(balls, players):
     actions = {}
     for player in players:
+        
         # Choose which ball to focus on
         ball = choose_ball(balls, players, player)
         # Determine the player's position and proximity to the ball
@@ -10,24 +11,27 @@ def get_possible_actions(balls, players):
         proximity = distance(player.position, ball.position)
         # Determine the possible actions for the player based on their position and proximity
         possible_actions = []
-        if proximity < 1:
-            if position == 'driver':
-                possible_actions.append('drive')
-                possible_actions.append('precision_hit')
-                possible_actions.append('pass_ball')
-            elif position == 'blocker':
-                possible_actions.append('block')
-                possible_actions.append('hit')
-                possible_actions.append('pass_ball')
-            elif position == 'marksman':
-                possible_actions.append('precision_hit')
-                possible_actions.append('pass_ball')
+        if player.position != 'caddy':
+            if proximity < 1:
+                if position == 'driver':
+                    possible_actions.append('drive')
+                    possible_actions.append('precision_hit')
+                    possible_actions.append('pass_ball')
+                elif position == 'blocker':
+                    possible_actions.append('block')
+                    possible_actions.append('hit')
+                    possible_actions.append('pass_ball')
+                elif position == 'marksman':
+                    possible_actions.append('precision_hit')
+                    possible_actions.append('pass_ball')
+                else:
+                    possible_actions.append('pass_ball')
             else:
-                possible_actions.append('pass_ball')
+                possible_actions.append('pursue_ball')
+                possible_actions.append('hit')
+            actions[player] = possible_actions
         else:
-            possible_actions.append('pursue_ball')
-            possible_actions.append('hit')
-        actions[player] = possible_actions
+            actions[player] = ['idle']
     return actions
 
 def choose_ball(balls, players, player):
@@ -50,6 +54,17 @@ def choose_ball(balls, players, player):
         best_ball = random.choice(same_score_balls)
     return best_ball
 
+def block(player):
+    if player.position == 'blocker':
+        success_prob = (player.balance + player.power + player.solidity) / 30.0
+    else:
+        success_prob = (player.balance + player.power + player.solidity) / 60.0
+    return random.random() < success_prob
+
+def dive(player):
+    success_prob = (player.speed + player.balance + player.solidity) / 30.0
+    return random.random() < success_prob
+
 def distance(pos1, pos2):
     # Calculate the distance between two positions
     return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
@@ -61,11 +76,23 @@ def drive(player):
         success_prob = (player.power + player.accuracy) / 40.0
     return random.random() < success_prob
 
-def block(player):
-    if player.position == 'blocker':
-        success_prob = (player.balance + player.power + player.solidity) / 30.0
-    else:
-        success_prob = (player.balance + player.power + player.solidity) / 60.0
+def hit(player):
+    success_prob = (player.power + player.savagery) / 20.0
+    return random.random() < success_prob
+
+def idle(player):
+    return True
+
+def movement(player):
+    success_prob = (player.speed + player.balance) / 20.0
+    return random.random() < success_prob
+
+def offer_bribe(player):
+    success_prob = (player.greed + player.integrity) / 20.0
+    return random.random() < success_prob
+
+def pass_ball(player):
+    success_prob = (player.accuracy + player.charisma) / 20.0
     return random.random() < success_prob
 
 def precision_hit(player):
@@ -75,29 +102,10 @@ def precision_hit(player):
         success_prob = (player.accuracy + player.competitiveness + player.dramatic_flair) / 60.0
     return random.random() < success_prob
 
-def movement(player):
+def pursue_ball(player):
     success_prob = (player.speed + player.balance) / 20.0
-    return random.random() < success_prob
-
-def pass_ball(player):
-    success_prob = (player.accuracy + player.charisma) / 20.0
-    return random.random() < success_prob
-
-def dive(player):
-    success_prob = (player.speed + player.balance + player.solidity) / 30.0
-    return random.random() < success_prob
-
-def offer_bribe(player):
-    success_prob = (player.greed + player.integrity) / 20.0
     return random.random() < success_prob
 
 def resist_bribe(player):
     success_prob = (player.integrity + player.cowardice) / 20.0
     return random.random() < success_prob
-
-def hit(player):
-    success_prob = (player.power + player.savagery) / 20.0
-    return random.random() < success_prob
-
-def idle(player):
-    return True
