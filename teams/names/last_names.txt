@@ -1,3 +1,4 @@
+Accursed
 Alpha
 Alverstone
 Amblewood
@@ -9,6 +10,7 @@ Brynhilda
 Butterfield
 Cannon
 Capulet
+Champion
 Chartwell
 Clatterford
 Cobblestone
@@ -49,6 +51,7 @@ Love
 Lumber
 Lumberjack
 Lumberjill
+Macbeth
 McGill
 McGuffin
 McReery
@@ -68,15 +71,18 @@ Pete
 Pig
 Pit
 Pondswallow
+Quinn
 Quiz
 Ravenswood
 Rizzo
 Roberts
 Rosebrook
 Shadowblade
+Skimbleshanks
 Simms
 Songbird
 Starbrook
+Switzerland
 Thornwhip
 Thunder
 Tofu

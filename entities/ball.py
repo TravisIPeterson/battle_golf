@@ -2,9 +2,10 @@ import pygame
 import math
 import random
 from entities.wind import Wind
+from entities.wall import Wall
 
 class Ball:
-    def __init__(self, x, y, radius):
+    def __init__(self, x, y, radius, wall):
         self.x = x
         self.y = y
         self.z = 0
@@ -16,6 +17,7 @@ class Ball:
         self.time_in_air = 0
         self.wind = Wind()
         self.time_on_ground = 0
+        self.wall = wall
 
     def update(self, greens):
 
@@ -48,6 +50,8 @@ class Ball:
         self.z += self.velocity[2]
 
         self.calculate_air_time()
+
+        self.check_wall_collision()
 
         # Apply gravity when the ball is in the air
         if self.z > 0:
@@ -97,6 +101,33 @@ class Ball:
             self.velocity[1] = random.uniform(-3, 3)
             self.velocity[2] = random.uniform(0, 10)
             self.time_on_ground = 0
+
+    def check_wall_collision(self):
+        # Calculate distance between ball's center and the center of the circle
+        distance_to_center = math.sqrt((self.x - self.wall.x)**2 + (self.y - self.wall.y)**2)
+
+        # Check if the ball has collided with the boundary of the circle
+        if distance_to_center >= self.wall.radius - self.radius:
+            # Calculate the normal vector from the center of the circle to the ball's center
+            normal_vector = [(self.wall.x - self.x) / distance_to_center, 
+                            (self.wall.y - self.y) / distance_to_center]
+            
+            # Dot product between ball's velocity and normal vector
+            dot_product = self.velocity[0]*normal_vector[0] + self.velocity[1]*normal_vector[1]
+            
+            # Reflect the ball's velocity across the normal
+            self.velocity[0] -= 2 * dot_product * normal_vector[0]
+            self.velocity[1] -= 2 * dot_product * normal_vector[1]
+
+            # Add some friction or reduce ball's speed after the collision
+            self.velocity[0] *= 0.9
+            self.velocity[1] *= 0.9
+
+            # Push the ball out of the circle to prevent it from getting stuck
+            push_out_distance = self.radius - self.wall.radius + distance_to_center + 1  # +1 or a small number for a slight push
+            self.x += push_out_distance * normal_vector[0]
+            self.y += push_out_distance * normal_vector[1]
+
     
     def calculate_air_time(self):
         if self.z > 0:

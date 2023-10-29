@@ -49,15 +49,20 @@ BORDER_COLOR = (255, 255, 255)
 # Create the Wall object
 wall = Wall(greens)
 
-# Create the Ball object
-center_x, center_y = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
-safe_radius = wall.radius * 0.9
-start_x, start_y = random_point_inside_circle(center_x, center_y, safe_radius)
-ball = Ball(start_x, start_y, 2, wall)
-distance_to_wall_center = math.sqrt((ball.x - wall.x)**2 + (ball.y - wall.y)**2)
-print(f"Ball's position: ({ball.x}, {ball.y}), Distance to wall's center: {distance_to_wall_center}")
+# Create the Ball objects
+num_balls = 8
+balls = []
+for i in range(num_balls):
+    center_x, center_y = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
+    safe_radius = wall.radius * 0.9
+    start_x, start_y = random_point_inside_circle(center_x, center_y, safe_radius)
+    ball = Ball(start_x, start_y, 2, wall)
+    balls.append(ball)
 
-#s Game loop
+current_wind_speed = 0
+current_wind_direction = 0
+
+# Game loop
 while True:
     # Handle events
     for event in pygame.event.get():
@@ -73,11 +78,10 @@ while True:
         pygame.draw.circle(screen, GREEN_COLOR, (int(green.x), int(green.y)), int(green.radius))
         pygame.draw.circle(screen, BLACK_COLOR, (int(green.hole_x), int(green.hole_y)), int(green.radius * 0.015))
 
-    # Update the ball object
-    ball.update(greens)
-
-    # Draw the ball object
-    ball.draw(screen)
+    # Update and draw the ball objects
+    for ball in balls:
+        ball.update(greens)
+        ball.draw(screen)
 
     # Draw the wall
     wall.draw(screen)
@@ -106,7 +110,7 @@ while True:
     pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(cursor_pos[0] - FIELD_SIZE // 2 - 1, cursor_pos[1] - FIELD_SIZE // 2 - 1, FIELD_SIZE + 2, FIELD_SIZE + 2), 1)
 
     # Draw the wind direction and speed indicator
-    wind_speed_text = FONT.render(str(round(ball.wind.speed)), True, TEXT_COLOR)
+    wind_speed_text = FONT.render(str(round(balls[0].wind.speed)), True, TEXT_COLOR)
     screen.blit(wind_speed_text, (SCREEN_WIDTH - 50, SCREEN_HEIGHT - 50))
 
     # Map wind direction to arrow rotation
@@ -120,7 +124,7 @@ while True:
         "W": 270,
         "NW": 315
     }
-    angle = direction_angles[ball.wind.direction]
+    angle = direction_angles[balls[0].wind.direction]
 
     # Create a new surface for the wind direction arrow
     wind_direction_arrow = pygame.Surface((50, 50), pygame.SRCALPHA)
@@ -136,7 +140,7 @@ while True:
     screen.blit(rotated_arrow, arrow_pos)
 
     # Display the direction text below the arrow
-    direction_text = FONT.render(ball.wind.direction, True, TEXT_COLOR)
+    direction_text = FONT.render(balls[0].wind.direction, True, TEXT_COLOR)
     screen.blit(direction_text, (SCREEN_WIDTH - 65, SCREEN_HEIGHT - 180))
 
 
@@ -145,3 +149,10 @@ while True:
 
     # Limit the frame rate
     clock.tick(60)
+
+    if not current_wind_speed == balls[0].wind.speed:
+        print(f"Wind speed: {balls[0].wind.speed}")
+        current_wind_speed = balls[0].wind.speed
+    if not current_wind_direction == balls[0].wind.direction:
+        print(f"Wind direction: {balls[0].wind.direction}")
+        current_wind_direction = balls[0].wind.direction

@@ -73,6 +73,7 @@ class Player:
             savagery *= random.uniform(1.1, 1.5)
             speed *= random.uniform(0.5, 1.0)
             stamina *= random.uniform(0.8, 1.2)
+            visual_calculus *= random.uniform(1.1, 1.5)
         elif position == 'goalie':
             balance *= random.uniform(1.1, 1.7)
             cowardice *= random.uniform(0.5, 0.8)
@@ -80,6 +81,16 @@ class Player:
             solidity *= random.uniform(1.1, 1.6)
             stamina *= random.uniform(1.2, 1.6)
             speed *= random.uniform(1.5, 2.0)
+        elif position == 'caddy':
+            charisma *= random.uniform(1.1, 1.6)
+            competitiveness *= random.uniform(1.1, 1.6)
+            cowardice *= random.uniform(1.1, 1.6)
+            dramatic_flair *= random.uniform(1.5, 3.0)
+            goutiness *= random.uniform(0.9, 1.3)
+            greed*= random.uniform(1.2, 1.4)
+            integrity *= random.uniform(1.5, 2.0)
+            intelligence *= random.uniform(0.4, 0.99)
+            savagery *= random.uniform(0.5, 0.8)
         else:
             accuracy *= random.uniform(0.8, 1.2)
             power *= random.uniform(0.8, 1.2)
@@ -158,17 +169,20 @@ db = Database('battle_golf.db')
 db.create_tables()
 
 teams = [
-    Team(name='Team A', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie')]),
-    Team(name='Team B', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie')]),
-    Team(name='Team C', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie')]),
-    Team(name='Team D', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie')]),
-    Team(name='Team E', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie')]),
-    Team(name='Team F', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie')]),
-    Team(name='Team G', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie')]),
-    Team(name='Team H', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie')])
+    Team(name='Team A', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie'), Player(position='caddy')]),
+    Team(name='Team B', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie'), Player(position='caddy')]),
+    Team(name='Team C', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie'), Player(position='caddy')]),
+    Team(name='Team D', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie'), Player(position='caddy')]),
+    Team(name='Team E', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie'), Player(position='caddy')]),
+    Team(name='Team F', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie'), Player(position='caddy')]),
+    Team(name='Team G', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie'), Player(position='caddy')]),
+    Team(name='Team H', players=[Player(position='driver'), Player(position='driver'), Player(position='blocker'), Player(position='blocker'), Player(position='marksman'), Player(position='goalie'), Player(position='caddy')])
 ]
 
 for team in teams:
     db.insert_team(team)
 
-db.get_table('players')
+db.cursor.execute("SELECT * FROM players")
+rows = db.cursor.fetchall()
+for row in rows:
+    print(row)
