@@ -3,27 +3,47 @@ import math
 import random
 from entities.wind import Wind
 from entities.wall import Wall
+from game_logic.game_state import Coordinates
 
 class Ball:
-    def __init__(self, x, y, radius, wall):
-        self.x = x
-        self.y = y
-        self.z = 0
+    def __init__(self, x, y, radius, wall, wind):
+        self.coordinates = Coordinates(x, y, 0)
         self.radius = radius
         self.velocity = [1, 1, 10]
         self.on_green = False
         self.green = None
         self.last_team = None
         self.time_in_air = 0
-        self.wind = Wind()
+        self.wind = wind
         self.time_on_ground = 0
         self.wall = wall
+    
+    @property
+    def x(self):
+        return self.coordinates.x
+    
+    @x.setter
+    def x(self, value):
+        self.coordinates.x = value
+
+    @property
+    def y(self):
+        return self.coordinates.y
+    
+    @y.setter
+    def y(self, value):
+        self.coordinates.y = value
+
+    @property
+    def z(self):
+        return self.coordinates.z
+    
+    @z.setter
+    def z(self, value):
+        self.coordinates.z = value
 
     def update(self, greens):
 
-        # Update the position of the ball based on its velocity
-        self.wind.update()
-        
         # Calculate wind effect based on height (z value) of the ball
         # Assuming the ball's max height can be 100 for full effect; adjust this value as necessary
         max_height_for_full_effect = 100
@@ -32,7 +52,24 @@ class Ball:
         wind_effect = [wind_effect[0] * 0.2, wind_effect[1]]  # Reduce the effect of the wind
             
         # Convert wind direction to x, y velocity components based on compass direction
-        wind_effects = {
+        wind_effects = self.get_wind_effects(wind_effect)
+        
+        self.velocity[0] += wind_effects[self.wind.direction][0]
+        self.velocity[1] += wind_effects[self.wind.direction][1]
+
+        self.x += self.velocity[0]
+        self.y += self.velocity[1]
+        self.z += self.velocity[2]
+
+        self.calculate_air_time()
+        self.check_wall_collision()
+        self.handle_ground_collisions()
+
+        # Check if ball is on a green
+        self.check_green_collisions(greens)
+
+    def get_wind_effects(self, wind_effect):
+        return {
             "N": (0, -wind_effect[0]),
             "S": (0, wind_effect[0]),
             "E": (wind_effect[0], 0),
@@ -42,18 +79,21 @@ class Ball:
             "SE": (wind_effect[0]/math.sqrt(2), wind_effect[0]/math.sqrt(2)),
             "SW": (-wind_effect[0]/math.sqrt(2), wind_effect[0]/math.sqrt(2)),
         }
-        
-        self.velocity[0] += wind_effects[self.wind.direction][0]
-        self.velocity[1] += wind_effects[self.wind.direction][1]
-        self.x += self.velocity[0]
-        self.y += self.velocity[1]
-        self.z += self.velocity[2]
 
-        self.calculate_air_time()
+    def check_green_collisions(self, greens):
+        on_green = False
+        green = None
+        for g in greens:
+            distance = math.sqrt((self.x - g.x) ** 2 + (self.y - g.y) ** 2)
+            if distance < g.radius:
+                on_green = True
+                green = g
+                break
+        self.on_green = on_green
+        self.green = green
+    
+    def handle_ground_collisions(self):
 
-        self.check_wall_collision()
-
-        # Apply gravity when the ball is in the air
         if self.z > 0:
             self.velocity[2] -= 0.1
         elif self.z <= 0:  # When the ball hits the ground
@@ -74,33 +114,6 @@ class Ball:
             self.velocity[1] = 0
         if abs(self.velocity[2]) < threshold_velocity:
             self.velocity[2] = 0
-        
-        # Check for collisions with the greens
-        on_green = False
-        green = None
-        for g in greens:
-            distance = math.sqrt((self.x - g.x) ** 2 + (self.y - g.y) ** 2)
-            if distance < g.radius:
-                on_green = True
-                green = g
-                break
-        self.on_green = on_green
-        self.green = green
-
-        # Check for collisions with the walls
-        if self.x - self.radius < 0 or self.x + self.radius > 1920:
-            self.velocity[0] = -self.velocity[0]
-        if self.y - self.radius < 0 or self.y + self.radius > 1080:
-            self.velocity[1] = -self.velocity[1]
-
-        if self.z == 0:
-            self.time_on_ground += 1
-        
-        if self.time_on_ground > 100:
-            self.velocity[0] = random.uniform(-3, 3)
-            self.velocity[1] = random.uniform(-3, 3)
-            self.velocity[2] = random.uniform(0, 10)
-            self.time_on_ground = 0
 
     def check_wall_collision(self):
         # Calculate distance between ball's center and the center of the circle

@@ -57,5 +57,5 @@ class Wind:
 
 
     def effect_on_ball(self, height_multiplier):
-        effect = self.speed * height_multiplier * 0.01
+        effect = self.speed * height_multiplier * 0.005
         return (effect, self.direction)

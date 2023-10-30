@@ -3,12 +3,23 @@ import random
 non_caddy_actions = ['block', 'drive', 'hit', 'idle', 'movement', 'pass_ball', 'precision_hit']
 
 def choose_action(balls, players):
-    action_determiner = random.randint(1, 100)
+    for ball in balls:
+        if not hasattr(ball, 'last_acted_upon'):
+            ball.last_acted_upon = 0
+
     for player in players:
+        
+        action_determiner = random.randint(0, 100)        
         
         # Choose which ball to focus on
         ball = choose_ball(balls, players, player)
-        # Determine the player's position and proximity to the ball
+        # Update the last acted upon turn for the chosen ball
+        ball.last_acted_upon = 0
+        # For all other balls, increase the last acted upon counter
+        for b in balls:
+            if b != ball:
+                b.last_acted_upon += 1
+                
         position = player.position
         proximity = distance(player.position, ball.position)
         # Determine the possible actions for the player based on their position and proximity
@@ -51,7 +62,7 @@ def choose_action(balls, players):
                 chosen_action = 'pursue_ball'
         else:
             if proximity < 10:
-                chosen_action = 'flee_ball''
+                chosen_action = 'flee_ball'
             else:
                 if action_determiner <= 90:
                     chosen_action = 'idle'
@@ -66,7 +77,6 @@ def choose_action(balls, players):
             action_function(player, ball)
 
 def choose_ball(balls, players, player):
-    # Determine which ball the player should focus on
     team_players = [p for p in players if p.team == player.team and p != player]
     opposing_players = [p for p in players if p.team != player.team]
     ball_scores = []
@@ -75,6 +85,8 @@ def choose_ball(balls, players, player):
         team_score = sum([1 for p in team_players if distance(p.position, ball.position) < 10])
         opposing_score = sum([1 for p in opposing_players if distance(p.position, ball.position) < 10])
         score = team_score * player.competitiveness / player.cowardice - opposing_score
+        # Adjust score based on last acted upon value
+        score += ball.last_acted_upon * 0.5  # This gives some preference to balls that haven't been acted upon recently
         ball_scores.append((ball, score))
     # Choose the ball with the highest score
     ball_scores.sort(key=lambda x: x[1], reverse=True)
