@@ -7,6 +7,7 @@ from entities.green import Green
 from entities.ball import Ball
 from utils.constants import *
 from entities.wall import Wall
+from entities.wind import Wind
 
 def random_point_inside_circle(cx, cy, r):
     theta = random.uniform(0, 2 * math.pi)  # Random angle
@@ -52,11 +53,14 @@ wall = Wall(greens)
 # Create the Ball objects
 num_balls = 8
 balls = []
+
+wind = Wind()
+
 for i in range(num_balls):
     center_x, center_y = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
     safe_radius = wall.radius * 0.9
     start_x, start_y = random_point_inside_circle(center_x, center_y, safe_radius)
-    ball = Ball(start_x, start_y, 2, wall)
+    ball = Ball(start_x, start_y, 2, wall, wind)
     balls.append(ball)
 
 current_wind_speed = 0
@@ -77,6 +81,8 @@ while True:
     for green in greens:
         pygame.draw.circle(screen, GREEN_COLOR, (int(green.x), int(green.y)), int(green.radius))
         pygame.draw.circle(screen, BLACK_COLOR, (int(green.hole_x), int(green.hole_y)), int(green.radius * 0.015))
+
+    wind.update()
 
     # Update and draw the ball objects
     for ball in balls:
@@ -142,7 +148,6 @@ while True:
     # Display the direction text below the arrow
     direction_text = FONT.render(balls[0].wind.direction, True, TEXT_COLOR)
     screen.blit(direction_text, (SCREEN_WIDTH - 65, SCREEN_HEIGHT - 180))
-
 
     # Update the screen
     pygame.display.flip()
