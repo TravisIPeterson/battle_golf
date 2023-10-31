@@ -14,4 +14,5 @@ BLACK_COLOR = (0, 0, 0)
 TEXT_COLOR = (255, 255, 255)
 
 # Font
-FONT = pygame.font.SysFont('Arial', 20)
+WIND_FONT = pygame.font.SysFont('Arial', 20)
+PLAYER_FONT = pygame.font.SysFont(None, 15)

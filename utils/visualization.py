@@ -8,12 +8,14 @@ from entities.ball import Ball
 from utils.constants import *
 from entities.wall import Wall
 from entities.wind import Wind
+from entities.player import Player
 
 def random_point_inside_circle(cx, cy, r):
     theta = random.uniform(0, 2 * math.pi)  # Random angle
     distance_from_center = random.uniform(0, r)  # Random distance from center
     x = cx + distance_from_center * math.cos(theta)
     y = cy + distance_from_center * math.sin(theta)
+    
     return x, y
 
 # Initialize Pygame
@@ -40,12 +42,35 @@ for i in range(num_greens):
     green = Green(team=f'Team {i}', x=x, y=y, radius=100, hole_x=x, hole_y=y)
     greens.append(green)
 
+
+def generate_players_within_green(green):
+    return random_point_inside_circle(green.x, green.y, green.radius - 10)
+
+players = Player.get_players_from_db()
+
+for player in players:
+    team = player.team_id
+    corresponding_green = next(g for g in greens if g.team == "Team " + str(team - 1))
+    x, y = generate_players_within_green(corresponding_green)
+    setattr(player, 'coordinates', (x, y))
+
 # Define the size of the square field and the zoom level
 FIELD_SIZE = 100
 ZOOM_LEVEL = 3
 
 # Define the color of the border
 BORDER_COLOR = (255, 255, 255)
+
+TEAM_COLORS = {
+    1: (255, 0, 0),
+    2: (0, 255, 0),
+    3: (0, 0, 255),
+    4: (0, 255, 255),
+    5: (255, 255, 0),
+    6: (128, 128, 0),
+    7: (255, 0, 255),
+    8: (0, 128, 128)
+}
 
 # Create the Wall object
 wall = Wall(greens)
@@ -60,7 +85,7 @@ for i in range(num_balls):
     center_x, center_y = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
     safe_radius = wall.radius * 0.9
     start_x, start_y = random_point_inside_circle(center_x, center_y, safe_radius)
-    ball = Ball(start_x, start_y, 2, wall, wind)
+    ball = Ball(start_x, start_y, 1.5, wall, wind)
     balls.append(ball)
 
 current_wind_speed = 0
@@ -80,7 +105,17 @@ while True:
     # Draw the greens
     for green in greens:
         pygame.draw.circle(screen, GREEN_COLOR, (int(green.x), int(green.y)), int(green.radius))
-        pygame.draw.circle(screen, BLACK_COLOR, (int(green.hole_x), int(green.hole_y)), int(green.radius * 0.015))
+        pygame.draw.circle(screen, BLACK_COLOR, (int(green.hole_x), int(green.hole_y)), int(green.radius * 0.05))
+
+    # Draw players
+    for player in players:
+        x, y = player.coordinates
+        pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 11)
+        pygame.draw.circle(screen, TEAM_COLORS[player.team_id], (int(x), int(y)), 10)
+
+        text_surface = PLAYER_FONT.render(player.initials, True, (0, 0, 0))
+        text_rect = text_surface.get_rect(center=(x, y))
+        screen.blit(text_surface, text_rect)
 
     wind.update()
 
@@ -116,7 +151,7 @@ while True:
     pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(cursor_pos[0] - FIELD_SIZE // 2 - 1, cursor_pos[1] - FIELD_SIZE // 2 - 1, FIELD_SIZE + 2, FIELD_SIZE + 2), 1)
 
     # Draw the wind direction and speed indicator
-    wind_speed_text = FONT.render(str(round(balls[0].wind.speed)), True, TEXT_COLOR)
+    wind_speed_text = WIND_FONT.render(str(round(balls[0].wind.speed)), True, TEXT_COLOR)
     screen.blit(wind_speed_text, (SCREEN_WIDTH - 50, SCREEN_HEIGHT - 50))
 
     # Map wind direction to arrow rotation
@@ -146,7 +181,7 @@ while True:
     screen.blit(rotated_arrow, arrow_pos)
 
     # Display the direction text below the arrow
-    direction_text = FONT.render(balls[0].wind.direction, True, TEXT_COLOR)
+    direction_text = WIND_FONT.render(balls[0].wind.direction, True, TEXT_COLOR)
     screen.blit(direction_text, (SCREEN_WIDTH - 65, SCREEN_HEIGHT - 180))
 
     # Update the screen
