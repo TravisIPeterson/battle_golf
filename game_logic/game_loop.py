@@ -8,6 +8,7 @@ from entities.wind import Wind
 from entities.player import Player
 from entities.green import Green
 from entities.ball import Ball
+from game_logic.game_state import Coordinates
 import math
 import random
 
@@ -57,7 +58,7 @@ def place_players_on_greens(greens):
         team = player.team_id
         corresponding_green = next(g for g in greens if g.team == "Team " + str(team - 1))
         x, y = generate_players_within_green(corresponding_green)
-        setattr(player, 'coordinates', (x, y))
+        player.coordinates = Coordinates(x, y)  # Set the coordinates directly as a Coordinates object
 
     return players
 

@@ -1,4 +1,5 @@
 import random
+import traceback
 from entities.ball import Ball
 
 
@@ -25,8 +26,7 @@ def choose_action(balls, players):
                 for b in balls:
                     if b != ball:
                         b.last_acted_upon += 1
-                        
-                coords = player.coordinates
+
                 proximity = distance(player.coordinates, ball.coordinates)
                 # Determine the possible actions for the player based on their coords and proximity
                 chosen_action = ''
@@ -78,16 +78,17 @@ def choose_action(balls, players):
                             chosen_action = 'hit'
 
                 print(chosen_action)
-                
+                chosen_action = 'pursue_ball'
                 # Call the chosen action function with the player and ball objects as arguments to ensure ball focus does not change
                 if chosen_action:
                     action_function = globals()[chosen_action]
-                    action_function(player, ball, players, balls)
+                    action_function(player, ball)
                 
                 player.action_completed = False
     
     except Exception as e:
         print(f"Error in choose_action: {e}")
+        traceback.print_exc()
 
 def choose_ball(balls, players, player):
     team_players = [p for p in players if p.team_id == player.team_id and p != player]
@@ -95,8 +96,8 @@ def choose_ball(balls, players, player):
     ball_scores = []
     for ball in balls:
         # Calculate the score for the ball based on the number of players near it
-        team_score = sum([1 for p in team_players if distance(p.position, ball.position) < 10])
-        opposing_score = sum([1 for p in opposing_players if distance(p.position, ball.position) < 10])
+        team_score = sum([1 for p in team_players if distance(p.coordinates, ball.coordinates) < 10])
+        opposing_score = sum([1 for p in opposing_players if distance(p.coordinates, p.coordinates) < 10])
         score = team_score * player.competitiveness / player.cowardice - opposing_score
         # Adjust score based on last acted upon value
         score += ball.last_acted_upon * 0.5  # This gives some preference to balls that haven't been acted upon recently
@@ -110,22 +111,22 @@ def choose_ball(balls, players, player):
         best_ball = random.choice(same_score_balls)
     return best_ball
 
-def distance(pos1, pos2):
-    # Calculate the distance between two positions
-    return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
+def distance(coord1, coord2):
+    # Calculate the 2D distance between two positions using the Coordinates objects directly
+    return ((coord1.x - coord2.x) ** 2 + (coord1.y - coord2.y) ** 2) ** 0.5
 
 def block(player, ball):
     success_prob = (player.balance + player.power + player.solidity)
     if random.randint(0, 20) < success_prob:
-        ball.position = player.position
-        ball.speed = 0
-        ball.direction = 0
+        ball.x = player.x
+        ball.y = player.y
+        ball.velocity = [0, 0, 0]  # Reset all components of the velocity
 
 # def dive(player):
 #    success_prob = (player.speed + player.balance + player.solidity)
 #    return random.random() < success_prob
 
-def drive(player, ball, players, balls):
+def drive(player, ball):
     success_prob = player.competitiveness + player.visual_calculus - abs(ball.velocity[0]) - abs(ball.velocity[1])
     if random.randint(0, 7) < success_prob:
         ball.velocity[0] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
@@ -134,6 +135,7 @@ def drive(player, ball, players, balls):
     else:
         print('drive failed')
 
+'''
 def hit(player):
     success_prob = (player.power + player.savagery) / 20.0
     return random.random() < success_prob
@@ -159,13 +161,18 @@ def precision_hit(player):
     else:
         success_prob = (player.accuracy + player.competitiveness + player.dramatic_flair) / 60.0
     return random.random() < success_prob
+'''
 
-def pursue_ball(player, ball, players, balls):
-    player.move(ball.coordinates)
+def pursue_ball(player, ball):
+    # Only move towards the ball and consider completing the action if the ball's z position allows interaction
+    if ball.z <= 5:
+        # Move the player towards the ball's x, y coordinates
+        player.move((ball.x, ball.y))
 
-    if distance(player.coordinates, ball.coordinates) < 1:
-        player.action_completed = True
+        # After moving, check if the player is close enough to interact with the ball
+        if distance((player.x, player.y), (ball.x, ball.y)) < 1:
+            player.action_completed = True
 
-def resist_bribe(player):
-    success_prob = (player.integrity + player.cowardice) / 20.0
-    return random.random() < success_prob
+# def resist_bribe(player):
+    # success_prob = (player.integrity + player.cowardice) / 20.0
+    # return random.random() < success_prob
