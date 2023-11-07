@@ -82,7 +82,6 @@ def main_game_loop():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
         choose_action(balls, players)
         draw_game_state(players, greens, balls, wall, wind, screen)
 

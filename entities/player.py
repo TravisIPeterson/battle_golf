@@ -34,6 +34,8 @@ class Player:
         self.visual_calculus = round(visual_calculus or random.uniform(1.0, 10.0), 2)
         self.weighted_stats(position, self.accuracy, self.balance, self.charisma, self.competitiveness, self.cowardice, self.dramatic_flair, self.goutiness, self.greed, self.integrity, self.intelligence, self.metabolism, self.neoliberalism, self.power, self.savagery, self.solidity, self.speed, self.stamina, self.visual_calculus)
         self.coordinates = Coordinates()
+        self.action_in_progress = None
+        self.action_completed = False
 
     @property
     def x(self):
@@ -92,7 +94,7 @@ class Player:
             dramatic_flair *= random.uniform(1.1, 1.6)
             solidity *= random.uniform(1.1, 1.6)
             stamina *= random.uniform(1.2, 1.6)
-            speed *= random.uniform(1.5, 2.0)
+            speed *= random.uniform(1.0, 1.5)
         elif position == 'caddy':
             charisma *= random.uniform(1.1, 1.6)
             competitiveness *= random.uniform(1.1, 1.6)
@@ -151,7 +153,7 @@ class Player:
             direction_y /= distance_to_target
 
         # Calculate the new potential position
-        adjusted_speed = self.speed + (self.metabolism + self.stamina / self.goutiness) * random.uniform(0.7, 1.3)
+        adjusted_speed = (self.speed + self.metabolism + self.stamina) / self.goutiness * random.uniform(0.1, 0.3)
         new_x = self.coordinates.x + direction_x * adjusted_speed
         new_y = self.coordinates.y + direction_y * adjusted_speed
 

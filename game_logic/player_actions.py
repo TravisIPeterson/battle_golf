@@ -14,9 +14,14 @@ def choose_action(balls, players):
                 ball.last_acted_upon = 0
 
         for player in players:
-
-            if player.action_completed:
             
+            if player.action_in_progress:
+                action_function = globals()[player.action_in_progress]
+                action_completed = action_function(player, ball)
+                if action_completed:
+                    player.action_in_progress = None
+
+            else:  
                 action_determiner = random.randint(0, 100)        
                 # Choose which ball to focus on
                 ball = choose_ball(balls, players, player)
@@ -77,15 +82,9 @@ def choose_action(balls, players):
                         else:
                             chosen_action = 'hit'
 
-                print(chosen_action)
-                chosen_action = 'pursue_ball'
+                player.action_in_progress = chosen_action
                 # Call the chosen action function with the player and ball objects as arguments to ensure ball focus does not change
-                if chosen_action:
-                    action_function = globals()[chosen_action]
-                    action_function(player, ball)
-                
-                player.action_completed = False
-    
+
     except Exception as e:
         print(f"Error in choose_action: {e}")
         traceback.print_exc()
@@ -145,12 +144,8 @@ def idle(player):
 
 def movement(player):
     success_prob = (player.speed + player.balance) / 20.0
-    return random.random() < success_prob
-
-def offer_bribe(player):
-    success_prob = (player.greed + player.integrity) / 20.0
-    return random.random() < success_prob
-
+    return random.ran
+        print(player.coordinates)
 def pass_ball(player):
     success_prob = (player.accuracy + player.charisma) / 20.0
     return random.random() < success_prob
@@ -164,14 +159,15 @@ def precision_hit(player):
 '''
 
 def pursue_ball(player, ball):
-    # Only move towards the ball and consider completing the action if the ball's z position allows interaction
-    if ball.z <= 5:
-        # Move the player towards the ball's x, y coordinates
-        player.move((ball.x, ball.y))
 
-        # After moving, check if the player is close enough to interact with the ball
-        if distance((player.x, player.y), (ball.x, ball.y)) < 1:
-            player.action_completed = True
+    # Move the player towards the ball's x, y coordinates
+    player.move((ball.x, ball.y))
+
+    # After moving, check if the player is close enough to interact with the ball
+    if distance((player.coordinates), (ball.coordinates)) < 1:
+        return True
+    else:
+        return False
 
 # def resist_bribe(player):
     # success_prob = (player.integrity + player.cowardice) / 20.0
