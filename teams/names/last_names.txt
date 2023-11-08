@@ -14,6 +14,8 @@ Champion
 Chartwell
 Clatterford
 Cobblestone
+Concrete
+Coriander
 Dan
 Dapplewood
 Dawnridge
@@ -28,12 +30,16 @@ Fairbrooke
 Featherby
 Fitzgerald
 Fitzwilliam
+Flamethrower
 Follybridge
+Frampton
 Gamma
+Gilmore
 Glass
 Glockenspiel
 Goldensong
 Greenfield
+Hammer
 Haverbrook
 Hickman
 Hickey
@@ -41,6 +47,7 @@ Hickory
 Highwater
 Hollowtree
 Inland
+Inglebrook
 Jones
 Klotz
 Kramer
@@ -56,6 +63,7 @@ McGill
 McGuffin
 McReery
 Meadowfair
+Meander
 Micky
 Moonshadow
 Montague
@@ -64,11 +72,13 @@ Montezuma
 Monty
 Mosswood
 Mozart
+Murkle
 None
 O'Brien
 Oakenshield
 Pete
 Pig
+Pines
 Pit
 Pondswallow
 Quinn
@@ -77,6 +87,7 @@ Ravenswood
 Rizzo
 Roberts
 Rosebrook
+Sandy
 Shadowblade
 Skimbleshanks
 Simms
@@ -91,6 +102,9 @@ Union
 Valewind
 Vexley
 Westbrooke
+Wife
+Williamsononian
+Wolf
 Wood
 Woods
 Xylophone

@@ -21,7 +21,7 @@ def random_point_inside_circle(cx, cy, r):
 
 def initialize_game():
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     pygame.display.set_caption('Battle Golf')
     clock = pygame.time.Clock()
 
@@ -39,12 +39,15 @@ def create_greens():
     center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
     angle_step = 2 * math.pi / num_greens
 
+    team_names = [f'Team {i}' for i in range(num_greens)]
+    random.shuffle(team_names)
+
     greens = []
     for i in range(num_greens):
         angle = i * angle_step
         x = center[0] + radius * math.cos(angle)
         y = center[1] + radius * math.sin(angle)
-        green = Green(team=f'Team {i}', x=x, y=y, radius=100, hole_x=x, hole_y=y)
+        green = Green(team=team_names[i], x=x, y=y, radius=100, hole_x=x, hole_y=y)
         greens.append(green)
 
     return greens

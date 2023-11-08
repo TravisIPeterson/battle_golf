@@ -140,13 +140,32 @@ class Ball:
             push_out_distance = self.radius - self.wall.radius + distance_to_center + 1  # +1 or a small number for a slight push
             self.x += push_out_distance * normal_vector[0]
             self.y += push_out_distance * normal_vector[1]
-
     
     def calculate_air_time(self):
         if self.z > 0:
             self.time_in_air += 1
         else:
             self.time_in_air = 0
+
+    def is_ascending(self):
+        return self.velocity[2] > 0
+
+    def predict_future_position(self, frames_ahead):
+        future_x = self.x + self.velocity[0] * frames_ahead
+        future_y = self.y + self.velocity[1] * frames_ahead
+        future_z = self.z + self.velocity[2] * frames_ahead - 0.5 * 0.1 * frames_ahead**2
+
+        for frame in range(frames_ahead):
+            wind_effect_multiplier = future_z / 100
+            wind_effect = self.wind.effect_on_ball(wind_effect_multiplier)
+            wind_effects = self.get_wind_effects([wind_effect[0] * 0.2, wind_effect[1]])
+            future_x += wind_effects[self.wind.direction][0]
+            future_y += wind_effects[self.wind.direction][1]
+
+            if future_z > 0:
+                future_z -= 0.1 * frame
+            
+        return future_x, future_y, future_z
 
     def draw(self, surface):
         # Adjust the radius of the ball based on its z value using a linear factor and a slight curve.

@@ -153,7 +153,7 @@ class Player:
             direction_y /= distance_to_target
 
         # Calculate the new potential position
-        adjusted_speed = (self.speed + self.metabolism + self.stamina) / self.goutiness * random.uniform(0.1, 0.3)
+        adjusted_speed = ((self.speed + self.metabolism + self.stamina) / self.goutiness) * 0.1
         new_x = self.coordinates.x + direction_x * adjusted_speed
         new_y = self.coordinates.y + direction_y * adjusted_speed
 
@@ -164,4 +164,23 @@ class Player:
         else:
             self.coordinates.x = new_x
             self.coordinates.y = new_y
+        
+    def get_prediction_frames(self, ball):
+        base_frames = 30
+        max_height = 100
+
+        if ball.is_ascending():
+            height_factor = ball.z / max_height
+            frames_ahead = base_frames * height_factor
+        else:
+            height_factor = (max_height - ball.z) / max_height
+            frames_ahead = base_frames * (1 - height_factor)
+
+        intelligence_factor = self.intelligence / random.uniform(5, 10)
+        visual_calculus_factor = self.visual_calculus / random.uniform(5, 10)
+        frames_adjustment = (intelligence_factor + visual_calculus_factor) / 2
+
+        final_prediction_frames = max(1, frames_ahead * frames_adjustment)
+
+        return int(final_prediction_frames)
 

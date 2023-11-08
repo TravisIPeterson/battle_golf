@@ -3,8 +3,6 @@ import sys
 sys.path.append('..')
 from utils.constants import *
 
-
-
 # Define the size of the square field and the zoom level
 FIELD_SIZE = 100
 ZOOM_LEVEL = 3

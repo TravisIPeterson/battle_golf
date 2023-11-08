@@ -33,10 +33,12 @@ Erik
 Fernando
 Fluffy
 Frosty
+Gerard
 Goldie
 Gonzo
 Gregory
 Grouch
+Heinrich
 Hick
 Hickman
 Hickory
@@ -48,6 +50,7 @@ Jelly
 Jewel
 Jitterbug
 Kermit
+Kim
 King
 Laddie
 Lassie
@@ -127,6 +130,7 @@ Walt
 Waltz
 Waltzing
 Whisper
+Winston
 Xavier
 Yolanda
 Zeus

@@ -40,6 +40,7 @@ def choose_action(balls, players):
                         if player.position == 'driver':
                             if action_determiner <= 40:
                                 chosen_action= 'drive'
+                            '''
                             elif action_determiner <= 50:
                                 chosen_action= 'precision_hit'
                             elif action_determiner <= 90:
@@ -69,8 +70,10 @@ def choose_action(balls, players):
                                 chosen_action = 'block'
                             else:
                                 chosen_action = random.choice(non_caddy_actions)
+                        '''
                     else:
                         chosen_action = 'pursue_ball'
+                '''
                 else:
                     if proximity < 10:
                         chosen_action = 'flee_ball'
@@ -81,6 +84,7 @@ def choose_action(balls, players):
                             chosen_action = 'offer_bribe'
                         else:
                             chosen_action = 'hit'
+                '''
 
                 player.action_in_progress = chosen_action
                 # Call the chosen action function with the player and ball objects as arguments to ensure ball focus does not change
@@ -131,8 +135,12 @@ def drive(player, ball):
         ball.velocity[0] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
         ball.velocity[1] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
         ball.velocity[2] += player.power * random.uniform(0.5, 1.5)
+        player.action_completed = True
+        return True
     else:
         print('drive failed')
+        player.action_completed = False
+        return False
 
 '''
 def hit(player):
@@ -159,14 +167,18 @@ def precision_hit(player):
 '''
 
 def pursue_ball(player, ball):
+    prediction_frames = player.get_prediction_frames(ball)
+    predicted_x, predicted_y, predicted_z = ball.predict_future_position(prediction_frames)
 
     # Move the player towards the ball's x, y coordinates
-    player.move((ball.x, ball.y))
+    player.move((predicted_x, predicted_y))
 
     # After moving, check if the player is close enough to interact with the ball
     if distance((player.coordinates), (ball.coordinates)) < 1:
+        player.action_completed = True
         return True
     else:
+        player.action_completed = False
         return False
 
 # def resist_bribe(player):
