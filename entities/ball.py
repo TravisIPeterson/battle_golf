@@ -17,6 +17,7 @@ class Ball:
         self.wind = wind
         self.time_on_ground = 0
         self.wall = wall
+        self.last_acted_upon = 0
     
     @property
     def x(self):

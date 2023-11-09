@@ -34,6 +34,7 @@ class Player:
         self.visual_calculus = round(visual_calculus or random.uniform(1.0, 10.0), 2)
         self.weighted_stats(position, self.accuracy, self.balance, self.charisma, self.competitiveness, self.cowardice, self.dramatic_flair, self.goutiness, self.greed, self.integrity, self.intelligence, self.metabolism, self.neoliberalism, self.power, self.savagery, self.solidity, self.speed, self.stamina, self.visual_calculus)
         self.coordinates = Coordinates()
+        self.targeted_ball = None
         self.action_in_progress = None
         self.action_completed = False
 

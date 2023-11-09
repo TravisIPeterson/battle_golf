@@ -2,117 +2,141 @@ import random
 import traceback
 from entities.ball import Ball
 
-
 non_caddy_actions = ['block', 'drive', 'hit', 'idle', 'movement', 'pass_ball', 'precision_hit']
 
 def choose_action(balls, players):
     try:
-        print("Entered choose_action")
 
+        # Increment last_acted_upon for all balls
         for ball in balls:
-            if not hasattr(ball, 'last_acted_upon'):
-                ball.last_acted_upon = 0
+            ball.last_acted_upon += 1
 
+        # Iterate over each player to determine their action
         for player in players:
-            
+            targeted_ball = None  # Initialize targeted_ball for this iteration
+
+            # If player has an action in progress, continue it
             if player.action_in_progress:
                 action_function = globals()[player.action_in_progress]
-                action_completed = action_function(player, ball)
+                targeted_ball = player.targeted_ball
+                action_completed = action_function(player, targeted_ball)
                 if action_completed:
                     player.action_in_progress = None
+                    player.targeted_ball = None
+            else:
+                # Choose a new ball if the player doesn't have one targeted
+                if player.targeted_ball is None:
+                    player.targeted_ball = choose_ball(balls, players, player)
+                targeted_ball = player.targeted_ball  # Get the ball that the player has targeted
 
-            else:  
-                action_determiner = random.randint(0, 100)        
-                # Choose which ball to focus on
-                ball = choose_ball(balls, players, player)
-                # Update the last acted upon turn for the chosen ball
-                ball.last_acted_upon = 0
-                # For all other balls, increase the last acted upon counter
-                for b in balls:
-                    if b != ball:
-                        b.last_acted_upon += 1
+                # Reset the last acted upon turn for the chosen ball
+                if targeted_ball:
+                    targeted_ball.last_acted_upon = 0
+                    # For all other balls, increase the last acted upon counter
+                    for b in balls:
+                        if b != targeted_ball:
+                            b.last_acted_upon += 1
 
-                proximity = distance(player.coordinates, ball.coordinates)
-                # Determine the possible actions for the player based on their coords and proximity
-                chosen_action = ''
-                if player.position != 'caddy':
-                    if proximity < 1:
-                        if player.position == 'driver':
-                            if action_determiner <= 40:
-                                chosen_action= 'drive'
-                            '''
-                            elif action_determiner <= 50:
-                                chosen_action= 'precision_hit'
-                            elif action_determiner <= 90:
-                                chosen_action = 'hit'
-                            else:
-                                chosen_action = random.choice(non_caddy_actions)
-                        elif player.position == 'blocker':
-                            if action_determiner <= 40:
-                                chosen_action = 'block'
-                            elif action_determiner <= 50:
-                                chosen_action = 'hit'
-                            elif action_determiner <= 90:
-                                chosen_action = 'pass_ball'
-                            else:
-                                chosen_action = random.choice(non_caddy_actions)
-                        elif player.position == 'marksman':
-                            if action_determiner <= 70:
-                                chosen_action = 'precision_hit'
-                            elif action_determiner <= 80:
-                                chosen_action = 'hit'
-                            elif action_determiner <= 90:
-                                chosen_action = 'pass_ball'
-                            else:
-                                chosen_action = random.choice(non_caddy_actions)
-                        else:
-                            if action_determiner <= 95:
-                                chosen_action = 'block'
-                            else:
-                                chosen_action = random.choice(non_caddy_actions)
-                        '''
-                    else:
-                        chosen_action = 'pursue_ball'
-                '''
-                else:
-                    if proximity < 10:
-                        chosen_action = 'flee_ball'
-                    else:
-                        if action_determiner <= 90:
-                            chosen_action = 'idle'
-                        elif action_determiner <= 92:
-                            chosen_action = 'offer_bribe'
-                        else:
-                            chosen_action = 'hit'
-                '''
-
-                player.action_in_progress = chosen_action
-                # Call the chosen action function with the player and ball objects as arguments to ensure ball focus does not change
+                # Determine the player's action
+                if targeted_ball:  # Ensure there is a targeted ball
+                    proximity = distance(player.coordinates, targeted_ball.coordinates)
+                    chosen_action = determine_player_action(player, proximity)
+                    player.action_in_progress = chosen_action
 
     except Exception as e:
         print(f"Error in choose_action: {e}")
         traceback.print_exc()
+        
+def determine_player_action(player, proximity):
+    action_determiner = random.uniform(0, 100)
+    chosen_action = 'pursue_ball'
+    if player.position != 'caddy':
+        if proximity < 5 and player.targeted_ball.z < 10:
+            if player.position: # == 'driver':
+                if action_determiner <= 1000000:
+                    chosen_action= 'drive'
+                '''
+                elif action_determiner <= 50:
+                    chosen_action= 'precision_hit'
+                elif action_determiner <= 90:
+                    chosen_action = 'hit'
+                else:
+                    chosen_action = random.choice(non_caddy_actions)
+            elif player.position == 'blocker':
+                if action_determiner <= 40:
+                    chosen_action = 'block'
+                elif action_determiner <= 50:
+                    chosen_action = 'hit'
+                elif action_determiner <= 90:
+                    chosen_action = 'pass_ball'
+                else:
+                    chosen_action = random.choice(non_caddy_actions)
+            elif player.position == 'marksman':
+                if action_determiner <= 70:
+                    chosen_action = 'precision_hit'
+                elif action_determiner <= 80:
+                    chosen_action = 'hit'
+                elif action_determiner <= 90:
+                    chosen_action = 'pass_ball'
+                else:
+                    chosen_action = random.choice(non_caddy_actions)
+            else:
+                if action_determiner <= 95:
+                    chosen_action = 'block'
+                else:
+                    chosen_action = random.choice(non_caddy_actions)
+            '''
+        else:
+            chosen_action = 'pursue_ball'
+    '''
+    else:
+        if proximity < 10:
+            chosen_action = 'flee_ball'
+        else:
+            if action_determiner <= 90:
+                chosen_action = 'idle'
+            elif action_determiner <= 92:
+                chosen_action = 'offer_bribe'
+            else:
+                chosen_action = 'hit'
+    '''
+    return chosen_action
 
 def choose_ball(balls, players, player):
-    team_players = [p for p in players if p.team_id == player.team_id and p != player]
-    opposing_players = [p for p in players if p.team_id != player.team_id]
+    # Track how many players are targeting each ball
+    ball_target_count = {ball: 0 for ball in balls}
+    for p in players:
+        if p.targeted_ball:
+            ball_target_count[p.targeted_ball] += 1
+
+    # Maximum number of players that can target the same ball
+    max_targets_per_ball = len(players) // len(balls)
+
+    # Calculate scores for each ball, taking into account the proximity and other factors.
     ball_scores = []
     for ball in balls:
-        # Calculate the score for the ball based on the number of players near it
-        team_score = sum([1 for p in team_players if distance(p.coordinates, ball.coordinates) < 10])
-        opposing_score = sum([1 for p in opposing_players if distance(p.coordinates, p.coordinates) < 10])
-        score = team_score * player.competitiveness / player.cowardice - opposing_score
-        # Adjust score based on last acted upon value
-        score += ball.last_acted_upon * 0.5  # This gives some preference to balls that haven't been acted upon recently
+        # Skip balls that are at maximum targeting capacity
+        if ball_target_count[ball] >= max_targets_per_ball:
+            continue
+        
+        # Other scoring remains the same
+        team_score = sum(1 for p in players if p.team_id == player.team_id and p != player and distance(p.coordinates, ball.coordinates) < 10)
+        opposing_score = sum(1 for p in players if p.team_id != player.team_id and distance(p.coordinates, ball.coordinates) < 10)
+        score = (team_score * player.competitiveness / (player.cowardice + 0.1)) - opposing_score
+        score += 10 * ball.last_acted_upon
+        
+        # Adjust score based on how many players are already targeting this ball
+        score /= (1 + ball_target_count[ball])
+        
         ball_scores.append((ball, score))
-    # Choose the ball with the highest score
+
+    if not ball_scores:
+        return None
+
+    # Sort the balls by their score
     ball_scores.sort(key=lambda x: x[1], reverse=True)
-    best_ball = ball_scores[0][0]
-    # Randomly choose a different ball if there are other balls with the same score
-    same_score_balls = [b for b, s in ball_scores if s == ball_scores[0][1]]
-    if len(same_score_balls) > 1:
-        best_ball = random.choice(same_score_balls)
-    return best_ball
+    chosen_ball = random.choices([ball for ball, score in ball_scores], weights=[score for ball, score in ball_scores], k=1)[0]
+    return chosen_ball
 
 def distance(coord1, coord2):
     # Calculate the 2D distance between two positions using the Coordinates objects directly
@@ -130,17 +154,19 @@ def block(player, ball):
 #    return random.random() < success_prob
 
 def drive(player, ball):
+    proximity = distance(player.coordinates, ball.coordinates)
     success_prob = player.competitiveness + player.visual_calculus - abs(ball.velocity[0]) - abs(ball.velocity[1])
-    if random.randint(0, 7) < success_prob:
-        ball.velocity[0] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
-        ball.velocity[1] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
-        ball.velocity[2] += player.power * random.uniform(0.5, 1.5)
-        player.action_completed = True
-        return True
-    else:
-        print('drive failed')
-        player.action_completed = False
-        return False
+    if proximity < 6:
+        if -1000000 < success_prob:
+            ball.velocity[0] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
+            ball.velocity[1] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
+            ball.velocity[2] += player.power * random.uniform(0.5, 1.5)
+            player.action_completed = True
+            return True
+        else:
+            print('drive failed')
+            player.action_completed = False
+            return False
 
 '''
 def hit(player):
@@ -172,9 +198,10 @@ def pursue_ball(player, ball):
 
     # Move the player towards the ball's x, y coordinates
     player.move((predicted_x, predicted_y))
+    print(player.name + " is chasing a ball.")
 
     # After moving, check if the player is close enough to interact with the ball
-    if distance((player.coordinates), (ball.coordinates)) < 1:
+    if distance((player.coordinates), (ball.coordinates)) < 5:
         player.action_completed = True
         return True
     else:
