@@ -21,6 +21,7 @@ Dapplewood
 Dawnridge
 Dewsnap
 Dinglewood
+Dolittle
 Edison
 Emberpeak
 Empty
@@ -34,11 +35,13 @@ Flamethrower
 Follybridge
 Frampton
 Gamma
+Gargantuar
 Gilmore
 Glass
 Glockenspiel
 Goldensong
 Greenfield
+Guacbowl
 Hammer
 Haverbrook
 Hickman
@@ -54,6 +57,7 @@ Kramer
 Larkspur
 Lefty
 Lightfoot
+Limbertoes
 Love
 Lumber
 Lumberjack
@@ -73,6 +77,8 @@ Monty
 Mosswood
 Mozart
 Murkle
+Nefarious
+Nice
 None
 O'Brien
 Oakenshield
@@ -81,6 +87,7 @@ Pig
 Pines
 Pit
 Pondswallow
+Prank
 Quinn
 Quiz
 Ravenswood
@@ -94,9 +101,11 @@ Simms
 Songbird
 Starbrook
 Switzerland
+Terrible
 Thornwhip
 Thunder
 Tofu
+Todd
 Triumphant
 Union
 Valewind

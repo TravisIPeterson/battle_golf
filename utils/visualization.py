@@ -21,9 +21,11 @@ TEAM_COLORS = {
     8: (0, 128, 128)
 }
 
-def draw_game_state(players, greens, balls, wall, wind, screen):
+def draw_game_state(players, greens, balls, wall, wind, teams, screen):
     # Clear the screen
     screen.fill(SKY_COLOR)
+
+    draw_scores(screen, teams)
 
     # Draw the greens
     for green in greens:
@@ -50,29 +52,6 @@ def draw_game_state(players, greens, balls, wall, wind, screen):
 
     # Draw the wall
     wall.draw(screen)
-
-    # Get the position of the cursor
-    cursor_pos = pygame.mouse.get_pos()
-
-    # Calculate the coordinates of the top-left corner of the square field
-    field_x = cursor_pos[0] - FIELD_SIZE // 2
-    field_y = cursor_pos[1] - FIELD_SIZE // 2
-
-    # Create a new surface with the size of the square field and blit the portion of the screen that corresponds to the square field onto it
-    field_surface = pygame.Surface((FIELD_SIZE, FIELD_SIZE))
-    field_surface.blit(screen, (-field_x, -field_y))
-
-    # Draw the border around the field
-    pygame.draw.rect(field_surface, BORDER_COLOR, pygame.Rect(0, 0, FIELD_SIZE, FIELD_SIZE), 1)
-
-    # Scale the new surface based on the zoom level
-    zoomed_surface = pygame.transform.scale(field_surface, (FIELD_SIZE * ZOOM_LEVEL, FIELD_SIZE * ZOOM_LEVEL))
-
-    # Blit the scaled surface onto the corner of the screen
-    screen.blit(zoomed_surface, (0, 0))
-
-    # Draw the border around the cursor
-    pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(cursor_pos[0] - FIELD_SIZE // 2 - 1, cursor_pos[1] - FIELD_SIZE // 2 - 1, FIELD_SIZE + 2, FIELD_SIZE + 2), 1)
 
     # Draw the wind direction and speed indicator
     wind_speed_text = WIND_FONT.render(str(round(balls[0].wind.speed)), True, TEXT_COLOR)
@@ -107,3 +86,14 @@ def draw_game_state(players, greens, balls, wall, wind, screen):
     # Display the direction text below the arrow
     direction_text = WIND_FONT.render(balls[0].wind.direction, True, TEXT_COLOR)
     screen.blit(direction_text, (SCREEN_WIDTH - 65, SCREEN_HEIGHT - 180))
+
+def draw_scores(screen, teams):
+    start_y = 20
+    padding = 5
+
+    for team in teams:
+        team_color = TEAM_COLORS.get(team.id, (255, 255, 255))
+        
+        score_text = TEAM_FONT.render(f"{team.name}: {team.score}", True, team_color)
+        screen.blit(score_text, (padding, start_y))
+        start_y += score_text.get_height() + padding

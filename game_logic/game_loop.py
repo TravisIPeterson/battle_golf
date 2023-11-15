@@ -8,6 +8,7 @@ from entities.wind import Wind
 from entities.player import Player
 from entities.green import Green
 from entities.ball import Ball
+from entities.team import Team
 from game_logic.game_state import Coordinates
 import math
 import random
@@ -80,13 +81,17 @@ def create_balls(wall, wind):
 def main_game_loop():
     screen, clock, greens, players, wall, wind, balls = initialize_game()
 
+    teams = Team.get_teams_from_db('../teams/battle_golf.db')
+
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+        for ball in balls:
+            ball.update(greens)
         choose_action(balls, players)
-        draw_game_state(players, greens, balls, wall, wind, screen)
+        draw_game_state(players, greens, balls, wall, wind, teams, screen)
 
         pygame.display.flip()
         clock.tick(60)

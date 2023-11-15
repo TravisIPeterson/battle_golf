@@ -130,9 +130,24 @@ class Player:
                 initials=row[2],
                 gender=row[3],
                 position=row[4],
-                power=row[5],
-                accuracy=row[6],
-                # ... and so on for the other attributes
+                accuracy=row[5],
+                balance=row[6],
+                charisma=row[7],
+                competitiveness=row[8],
+                cowardice=row[9],
+                dramatic_flair=row[10],
+                goutiness=row[11],
+                greed=row[12],
+                integrity=row[13],
+                intelligence=row[14],
+                metabolism=row[15],
+                neoliberalism=row[16],
+                power=row[17],
+                savagery=row[18],
+                solidity=row[19],
+                speed=row[20],
+                stamina=row[21],
+                visual_calculus=row[22]
             )
             player.coordinates = Coordinates()
             players.append(player)

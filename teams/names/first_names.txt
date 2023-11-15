@@ -1,4 +1,5 @@
-A
+Alix
+Amanda
 Bandit
 Bear
 Bella
@@ -29,6 +30,7 @@ Dorothy
 Duke
 Dusty
 Edith
+Ellen
 Erik
 Fernando
 Fluffy
@@ -54,6 +56,7 @@ Kim
 King
 Laddie
 Lassie
+Leslie
 Lightning
 Lola
 Lollygag
@@ -95,13 +98,16 @@ Rex
 Roger
 Rosie
 Rocky
+Roisin
 Rumba
 Rusty
+Ryan
 Sable
 Salsa
 Sam
 Samba
 Scoot
+Scott
 Shadow
 Silver
 Sky
@@ -110,6 +116,7 @@ Snowy
 Sprinkle
 Stank
 Star
+Steph
 Storm
 Stormy
 Summer

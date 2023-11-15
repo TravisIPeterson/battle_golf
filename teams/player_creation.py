@@ -2,6 +2,7 @@ import sqlite3
 import sys
 sys.path.append('..')
 from entities.player import Player
+from entities.team import Team
 
 team_names = {
     1: 'Toronto Trombones',
@@ -12,11 +13,6 @@ team_names = {
     6: 'Osaka Ocelots',
     7: 'Laguna Beach Creatures',
 }
-
-class Team:
-    def __init__(self, name, players):
-        self.name = name
-        self.players = players
 
 class Database:
     def __init__(self, db_file):
@@ -93,7 +89,7 @@ for team_id in range(1, 9):  # This will loop from 1 to 8
         players.append(Player(team_id=team_id, position=position))
     
     team_name = team_names.get(team_id, f"Team {team_id}")
-    team = Team(name=team_name, players=players)
+    team = Team(id=team_id, name=team_name, players=players)
     teams.append(team)
 
 for team in teams:

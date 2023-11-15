@@ -6,20 +6,16 @@ non_caddy_actions = ['block', 'drive', 'hit', 'idle', 'movement', 'pass_ball', '
 
 def choose_action(balls, players):
     try:
-
         # Increment last_acted_upon for all balls
         for ball in balls:
             ball.last_acted_upon += 1
 
         # Iterate over each player to determine their action
         for player in players:
-            targeted_ball = None  # Initialize targeted_ball for this iteration
-
             # If player has an action in progress, continue it
             if player.action_in_progress:
                 action_function = globals()[player.action_in_progress]
-                targeted_ball = player.targeted_ball
-                action_completed = action_function(player, targeted_ball)
+                action_completed = action_function(player, player.targeted_ball)
                 if action_completed:
                     player.action_in_progress = None
                     player.targeted_ball = None
@@ -27,19 +23,18 @@ def choose_action(balls, players):
                 # Choose a new ball if the player doesn't have one targeted
                 if player.targeted_ball is None:
                     player.targeted_ball = choose_ball(balls, players, player)
-                targeted_ball = player.targeted_ball  # Get the ball that the player has targeted
 
                 # Reset the last acted upon turn for the chosen ball
-                if targeted_ball:
-                    targeted_ball.last_acted_upon = 0
+                if player.targeted_ball:
+                    player.targeted_ball.last_acted_upon = 0
                     # For all other balls, increase the last acted upon counter
                     for b in balls:
-                        if b != targeted_ball:
+                        if b != player.targeted_ball:
                             b.last_acted_upon += 1
 
                 # Determine the player's action
-                if targeted_ball:  # Ensure there is a targeted ball
-                    proximity = distance(player.coordinates, targeted_ball.coordinates)
+                if player.targeted_ball:  # Ensure there is a targeted ball
+                    proximity = distance(player.coordinates, player.targeted_ball.coordinates)
                     chosen_action = determine_player_action(player, proximity)
                     player.action_in_progress = chosen_action
 
@@ -157,15 +152,15 @@ def drive(player, ball):
     proximity = distance(player.coordinates, ball.coordinates)
     success_prob = player.competitiveness + player.visual_calculus - abs(ball.velocity[0]) - abs(ball.velocity[1])
     if proximity < 6:
-        if -1000000 < success_prob:
-            ball.velocity[0] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
-            ball.velocity[1] += (player.power + player.accuracy) * random.uniform(0.5, 1.5)
+        if random.randint(0, 7) < success_prob:
+            ball.velocity[0] += (player.power + player.accuracy) * random.uniform(0.1, 0.3)
+            ball.velocity[1] += (player.power + player.accuracy) * random.uniform(0.1, 0.3)
             ball.velocity[2] += player.power * random.uniform(0.5, 1.5)
-            player.action_completed = True
+            player.action_in_progress = None
+            player.targeted_ball = None
             return True
         else:
             print('drive failed')
-            player.action_completed = False
             return False
 
 '''
@@ -198,14 +193,12 @@ def pursue_ball(player, ball):
 
     # Move the player towards the ball's x, y coordinates
     player.move((predicted_x, predicted_y))
-    print(player.name + " is chasing a ball.")
 
     # After moving, check if the player is close enough to interact with the ball
     if distance((player.coordinates), (ball.coordinates)) < 5:
-        player.action_completed = True
+        player.action_in_progress = None
         return True
     else:
-        player.action_completed = False
         return False
 
 # def resist_bribe(player):
