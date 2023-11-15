@@ -47,7 +47,7 @@ def create_greens(teams):
         angle = i * angle_step
         x = center[0] + radius * math.cos(angle)
         y = center[1] + radius * math.sin(angle)
-        green = Green(team=teams[i].name, x=x, y=y, radius=100, hole_x=x, hole_y=y)
+        green = Green(team=teams[i].id, x=x, y=y, radius=100, hole_x=x, hole_y=y)
         print(green.team)
         greens.append(green)
 
@@ -60,11 +60,7 @@ def place_players_on_greens(greens):
     players = Player.get_players_from_db()
     for player in players:
         team = player.team_id
-        team_name = ''
-        for i in range(len(teams)):
-            if teams[i].id == team:
-                team_name = teams[i].name
-        corresponding_green = next(g for g in greens if g.team == team_name)
+        corresponding_green = next(g for g in greens if g.team == team)
         x, y = generate_players_within_green(corresponding_green)
         player.coordinates = Coordinates(x, y)  # Set the coordinates directly as a Coordinates object
 
