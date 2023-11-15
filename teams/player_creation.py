@@ -12,6 +12,7 @@ team_names = {
     5: 'Berlin Hamburgers',
     6: 'Osaka Ocelots',
     7: 'Laguna Beach Creatures',
+    8: 'El Dorado Boulevards'
 }
 
 class Database:
