@@ -47,7 +47,7 @@ def draw_game_state(players, greens, balls, wall, wind, teams, screen):
 
     # Update and draw the ball objects
     for ball in balls:
-        ball.update(greens)
+        ball.update(greens, teams)
         ball.draw(screen)
 
     # Draw the wall

@@ -1,9 +1,12 @@
 import pygame
 import math
 import random
+import threading
+import time
 from entities.wind import Wind
 from entities.wall import Wall
 from game_logic.game_state import Coordinates
+from utils.constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 class Ball:
     def __init__(self, x, y, radius, wall, wind):
@@ -18,6 +21,7 @@ class Ball:
         self.time_on_ground = 0
         self.wall = wall
         self.last_acted_upon = 0
+        self.in_hole = False
     
     @property
     def x(self):
@@ -50,7 +54,7 @@ class Ball:
         distance = math.sqrt(dx**2 + dy**2)
         return dx/distance, dy/distance
 
-    def update(self, greens):
+    def update(self, greens, teams):
 
         # Calculate wind effect based on height (z value) of the ball
         # Assuming the ball's max height can be 100 for full effect; adjust this value as necessary
@@ -76,10 +80,39 @@ class Ball:
         # Check if ball is on a green
         self.check_green_collisions(greens)
 
-        if self.on_green and self.time_in_air == 0:
-            direction_x, direction_y = self.direction_toward_center()
-            self.velocity[0] += direction_x * 0.07
-            self.velocity[1] += direction_y * 0.07
+        # Check if the ball is over the center of a green and its z is less than 1
+        for green in greens:
+            if self.z < 1 and abs(self.x - green.hole_x) < 20 and abs(self.y - green.hole_y) < 20:
+                self.handle_ball_in_hole(green, teams)
+                break
+
+            # If the ball is on a green and not in the air, adjust its velocity towards the center of the green
+            elif self.on_green and self.time_in_air == 0:
+                self.adjust_velocity_towards_green_center(green)
+
+    def handle_ball_in_hole(self, green, teams):
+        # Calculate the chance of the ball staying in the hole
+        chance = 1 - max(abs(self.velocity[0]), abs(self.velocity[1]))
+        
+        if random.random() < chance:
+            # The ball stays in the hole, increase the team's score
+            self.in_hole = True
+            for team in teams:
+                if team.id == green.team:
+                    team.score += 1
+                    break
+
+            # Make the ball disappear
+            self.coordinates = Coordinates(-10000000, -1000000000, 0)
+            self.velocity = [0, 0, 0]
+
+            # Start a new thread to respawn the ball after 5 seconds
+            threading.Thread(target=self.respawn).start()
+
+    def adjust_velocity_towards_green_center(self, green):
+        direction_x, direction_y = self.direction_toward_center()
+        self.velocity[0] += direction_x * 0.07
+        self.velocity[1] += direction_y * 0.07
 
     def get_wind_effects(self, wind_effect):
         return {
@@ -138,7 +171,7 @@ class Ball:
         distance_to_center = math.sqrt((self.x - self.wall.x)**2 + (self.y - self.wall.y)**2)
 
         # Check if the ball has collided with the boundary of the circle
-        if distance_to_center >= self.wall.radius - self.radius:
+        if distance_to_center >= self.wall.radius - self.radius and self.in_hole == False:
             # Calculate the normal vector from the center of the circle to the ball's center
             normal_vector = [(self.wall.x - self.x) / distance_to_center, 
                             (self.wall.y - self.y) / distance_to_center]
@@ -184,6 +217,12 @@ class Ball:
                 future_z -= 0.1 * frame
             
         return future_x, future_y, future_z
+    
+    def respawn(self):
+        time.sleep(5)
+        self.coordinates = Coordinates(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 250)
+        self.velocity = [random.uniform(-1, 1), random.uniform(-1, 1), 0]
+        self.in_hole = False
 
     def draw(self, surface):
         # Adjust the radius of the ball based on its z value using a linear factor and a slight curve.

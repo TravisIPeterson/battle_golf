@@ -87,7 +87,7 @@ def main_game_loop():
             if event.type == pygame.QUIT:
                 running = False
         for ball in balls:
-            ball.update(greens)
+            ball.update(greens, teams)
         choose_action(balls, players, greens, wind)
         draw_game_state(players, greens, balls, wall, wind, teams, screen)
 
