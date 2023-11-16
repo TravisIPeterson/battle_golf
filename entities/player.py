@@ -1,13 +1,14 @@
 import random
 import string
 import sqlite3
+import math
 from game_logic.game_state import Coordinates
 
 class Player:
     def __init__(self, team_id, position, name=None, initials=None, gender=None, accuracy=None, balance=None, charisma=None,
                  competitiveness=None, cowardice=None, dramatic_flair=None, goutiness=None,
                  greed=None, integrity=None, intelligence=None, metabolism = None, neoliberalism=None, power=None, savagery=None,
-                 solidity=None, speed=None, stamina=None, visual_calculus=None):
+                 solidity=None, speed=None, stamina=None, tenacity=None, visual_calculus=None):
         self.team_id = team_id
         self.position = position
         self.name = name or self.generate_name()
@@ -31,8 +32,9 @@ class Player:
         self.solidity = round(solidity or random.uniform(1.0, 10.0), 2)
         self.speed = round(speed or random.uniform(1.0, 10.0), 2)
         self.stamina = round(stamina or random.uniform(1.0, 10.0), 2)
+        self.tenacity = round(tenacity or random.uniform(1.0, 10.0), 2)
         self.visual_calculus = round(visual_calculus or random.uniform(1.0, 10.0), 2)
-        self.weighted_stats(position, self.accuracy, self.balance, self.charisma, self.competitiveness, self.cowardice, self.dramatic_flair, self.goutiness, self.greed, self.integrity, self.intelligence, self.metabolism, self.neoliberalism, self.power, self.savagery, self.solidity, self.speed, self.stamina, self.visual_calculus)
+        self.weighted_stats(position, self.accuracy, self.balance, self.charisma, self.competitiveness, self.cowardice, self.dramatic_flair, self.goutiness, self.greed, self.integrity, self.intelligence, self.metabolism, self.neoliberalism, self.power, self.savagery, self.solidity, self.speed, self.stamina, self.tenacity, self.visual_calculus)
         self.coordinates = Coordinates()
         self.targeted_ball = None
         self.action_in_progress = None
@@ -65,7 +67,7 @@ class Player:
 
         return gender
 
-    def weighted_stats(self, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, visual_calculus):
+    def weighted_stats(self, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, visual_calculus):
         if position == 'driver':
             accuracy *= random.uniform(1.0, 1.3)
             power *= random.uniform(1.0, 1.7)
@@ -117,7 +119,7 @@ class Player:
         conn = sqlite3.connect('../teams/battle_golf.db')
         cursor = conn.cursor()
 
-        cursor.execute("SELECT team_id, name, initials, gender, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, visual_calculus FROM players")
+        cursor.execute("SELECT team_id, name, initials, gender, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, visual_calculus FROM players")
         data = cursor.fetchall()
 
         conn.close()
@@ -147,14 +149,15 @@ class Player:
                 solidity=row[19],
                 speed=row[20],
                 stamina=row[21],
-                visual_calculus=row[22]
+                tenacity=row[22],
+                visual_calculus=row[23]
             )
             player.coordinates = Coordinates()
             players.append(player)
 
         return players
 
-    def move(self, target_coordinates):
+    def move(self, target_coordinates, greens, wind):
         # Extract x and y from the target_coordinates if it's not a tuple (for safety)
         target_x, target_y = target_coordinates if isinstance(target_coordinates, tuple) else (target_coordinates.x, target_coordinates.y)
 
@@ -170,8 +173,20 @@ class Player:
 
         # Calculate the new potential position
         adjusted_speed = ((self.speed + self.metabolism + self.stamina) / self.goutiness) * 0.1
+        if adjusted_speed < 0.25:
+            adjusted_speed = 0.25
+        if adjusted_speed > 1.75:
+            adjusted_speed = 1.75
         new_x = self.coordinates.x + direction_x * adjusted_speed
         new_y = self.coordinates.y + direction_y * adjusted_speed
+
+        # Check if the new position is on the green of another team
+        for green in greens:
+            if green.team != self.team_id and green.contains(new_x, new_y):
+                # The new position is on another team's green, do not update the position
+                self.action_in_progress = None
+                self.targeted_ball = None
+                return
 
         # Check if the player has reached the target coordinates and update accordingly
         if (new_x - target_x)**2 + (new_y - target_y)**2 < adjusted_speed**2:
@@ -200,3 +215,31 @@ class Player:
 
         return int(final_prediction_frames)
 
+    def aim(self, greens, wind):
+        # Calculate rivalry scores
+        rivalry_scores = [(self.team_id - green.team) % 8 for green in greens]
+        # Select target green based on competitiveness, dramatic flair, and cowardice
+        feeling_feisty = self.competitiveness * self.dramatic_flair / (self.cowardice + self.savagery)
+        if feeling_feisty > random.uniform(7, 10):
+            # Target green with rivalry score of 4
+            target_green = greens[rivalry_scores.index(4)] if 4 in rivalry_scores else random.choice(greens)
+        elif feeling_feisty > random.uniform(5, 7):
+            # Target green with rivalry score of 3 or 5
+            target_green = greens[rivalry_scores.index(random.choice([3, 5]))] if any(i in rivalry_scores for i in [3, 5]) else random.choice(greens)
+        elif feeling_feisty > random.uniform(3, 5):
+            # Target green with rivalry score of 2 or 6
+            target_green = greens[rivalry_scores.index(random.choice([2, 6]))] if any(i in rivalry_scores for i in [2, 6]) else random.choice(greens)
+        else:
+            # Target green with rivalry score of 1 or 7
+            target_green = greens[rivalry_scores.index(random.choice([1, 7]))] if any(i in rivalry_scores for i in [1, 7]) else random.choice(greens)
+        # Calculate direction towards center of target green, factoring in visual calculus and intelligence
+        dx = target_green.hole_x - self.x
+        dy = target_green.hole_y - self.y
+        distance = math.sqrt(dx**2 + dy**2)
+        direction_x = dx / distance * (1 + self.visual_calculus / 10)  # Higher visual_calculus leads to more accurate direction
+        direction_y = dy / distance * (1 + self.visual_calculus / 10)  # Higher visual_calculus leads to more accurate direction
+        # Adjust for wind direction and speed, factoring in intelligence
+        wind_direction_vector, wind_speed = wind.get_direction_vector()
+        direction_x -= wind_direction_vector[0] * wind_speed * (1 - self.intelligence / 10)  # Higher intelligence leads to better wind adjustment
+        direction_y -= wind_direction_vector[1] * wind_speed * (1 - self.intelligence / 10)  # Higher intelligence leads to better wind adjustment
+        return direction_x, direction_y

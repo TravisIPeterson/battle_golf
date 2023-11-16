@@ -59,3 +59,16 @@ class Wind:
     def effect_on_ball(self, height_multiplier):
         effect = self.speed * height_multiplier * 0.005
         return (effect, self.direction)
+    
+    def get_direction_vector(self):
+        direction_vectors = {
+            "N": (0, -1),
+            "S": (0, 1),
+            "E": (1, 0),
+            "W": (-1, 0),
+            "NE": (1, -1),
+            "NW": (-1, -1),
+            "SE": (1, 1),
+            "SW": (-1, 1)
+        }
+        return direction_vectors[self.direction], self.speed

@@ -43,6 +43,13 @@ class Ball:
     def z(self, value):
         self.coordinates.z = value
 
+    # Simulate greens being funnel-shaped
+    def direction_toward_center(self):
+        dx = self.green.hole_x - self.x
+        dy = self.green.hole_y - self.y
+        distance = math.sqrt(dx**2 + dy**2)
+        return dx/distance, dy/distance
+
     def update(self, greens):
 
         # Calculate wind effect based on height (z value) of the ball
@@ -68,6 +75,11 @@ class Ball:
 
         # Check if ball is on a green
         self.check_green_collisions(greens)
+
+        if self.on_green and self.time_in_air == 0:
+            direction_x, direction_y = self.direction_toward_center()
+            self.velocity[0] += direction_x * 0.07
+            self.velocity[1] += direction_y * 0.07
 
     def get_wind_effects(self, wind_effect):
         return {
@@ -102,8 +114,13 @@ class Ball:
             if self.velocity[2] < 0:  # If the ball had a downward velocity
                 self.velocity[2] = -self.velocity[2] * 0.3  # Bounce the ball, reducing its velocity
         
-        if self.z == 0:
+        if self.z == 0 and self.on_green == False:
             friction_coefficient = 0.9  # You can adjust this value for more or less friction
+            self.velocity[0] *= friction_coefficient
+            self.velocity[1] *= friction_coefficient
+        
+        if self.z == 0 and self.on_green == True:
+            friction_coefficient = 0.95  # You can adjust this value for more or less friction
             self.velocity[0] *= friction_coefficient
             self.velocity[1] *= friction_coefficient
 

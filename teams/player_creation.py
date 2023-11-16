@@ -56,6 +56,7 @@ class Database:
                 solidity REAL,
                 speed REAL,
                 stamina REAL,
+                tenacity REAL,
                 visual_calculus REAL,
                 FOREIGN KEY (team_id) REFERENCES teams (id)
             )
@@ -66,7 +67,7 @@ class Database:
         team_id = self.cursor.lastrowid
 
         for player in team.players:
-            self.cursor.execute('INSERT INTO players (team_id, name, initials, gender, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, visual_calculus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (team_id, player.name, player.initials, player.gender, player.position, player.accuracy, player.balance, player.charisma, player.competitiveness, player.cowardice, player.dramatic_flair, player.goutiness, player.greed, player.integrity, player.intelligence, player.metabolism, player.neoliberalism, player.power, player.savagery, player.solidity, player.speed, player.stamina, player.visual_calculus))
+            self.cursor.execute('INSERT INTO players (team_id, name, initials, gender, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, visual_calculus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (team_id, player.name, player.initials, player.gender, player.position, player.accuracy, player.balance, player.charisma, player.competitiveness, player.cowardice, player.dramatic_flair, player.goutiness, player.greed, player.integrity, player.intelligence, player.metabolism, player.neoliberalism, player.power, player.savagery, player.solidity, player.speed, player.stamina, player.tenacity, player.visual_calculus))
 
         self.conn.commit()
 
