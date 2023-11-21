@@ -88,6 +88,7 @@ def main_game_loop():
                 running = False
         for ball in balls:
             ball.update(greens, teams)
+            ball.check_player_collisions(players)
         choose_action(balls, players, greens, wind)
         draw_game_state(players, greens, balls, wall, wind, teams, screen)
 

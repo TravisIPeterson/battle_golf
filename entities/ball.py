@@ -191,6 +191,12 @@ class Ball:
             push_out_distance = self.radius - self.wall.radius + distance_to_center + 1  # +1 or a small number for a slight push
             self.x += push_out_distance * normal_vector[0]
             self.y += push_out_distance * normal_vector[1]
+        
+    def check_player_collisions(self, players):
+        if 0 < self.z < 5:
+            for player in players:
+                if player.is_hit(self):
+                    player.calculate_hit_consequences(self)
     
     def calculate_air_time(self):
         if self.z > 0:

@@ -7,3 +7,5 @@ CCK
 SLT
 KKK
 TRF
+HIV
+HPV

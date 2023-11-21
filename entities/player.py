@@ -259,3 +259,51 @@ class Player:
         direction_x = dx / distance * (1 + self.visual_calculus * self.accuracy / 10)
         direction_y = dy / distance * (1 + self.visual_calculus * self.accuracy / 10)
         return direction_x, direction_y
+    
+    def is_hit(self, ball):
+        # Calculate distance between player and ball
+        dx = ball.x - self.x
+        dy = ball.y - self.y
+        distance = math.sqrt(dx**2 + dy**2)
+
+        # Calculate the chance of hitting the ball
+        if distance < 1 and random.random() < 0.01:
+            if (ball.velocity[0] * ball.velocity[1]) > (self.solidity * self.metabolism  + self.balance + self.tenacity) / self.goutiness:
+                if self.position == 'blocker' and random.random() < 0.2:
+                    return False
+                if self.position == 'goalie' and random.random() < 0.2:
+                    return False
+                return True
+            return True
+            
+    def calculate_hit_consequences(self, ball):
+        variable_names = {
+            'accuracy': self.accuracy,
+            'balance': self.balance,
+            'charisma': self.charisma,
+            'competitiveness': self.competitiveness,
+            'cowardice': self.cowardice,
+            'dramatic_flair': self.dramatic_flair,
+            'goutiness': self.goutiness,
+            'greed': self.greed,
+            'integrity': self.integrity,
+            'intelligence': self.intelligence,
+            'metabolism': self.metabolism,
+            'neoliberalism': self.neoliberalism,
+            'power': self.power,
+            'savagery': self.savagery,
+            'solidity': self.solidity,
+            'speed': self.speed,
+            'stamina': self.stamina,
+            'tenacity': self.tenacity,
+            'visual_calculus': self.visual_calculus
+        }
+    # Divide a random player stat by velocity of the ball
+        variable_name = random.choice(list(variable_names.keys()))
+        affected_stat = variable_names[variable_name]
+
+        # Update the player's attribute
+        setattr(self, variable_name, affected_stat / random.uniform(0.9, 2))
+        if affected_stat > 10:
+            setattr(self, variable_name, affected_stat % 10)
+        print(f"{self.name} got hit! Their {variable_name} is now {affected_stat}.")

@@ -181,8 +181,8 @@ def drive(player, ball, greens, wind):
     if proximity < 6:
         if random.randint(0, 7) < success_prob:
             direction_x, direction_y = player.aim(greens, wind)
-            ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.2)
-            ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.2)
+            ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.15)
+            ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.15)
             ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
         else:
             print('drive failed')
@@ -221,8 +221,8 @@ def precision_hit(player, ball, greens, wind):
     if proximity < 6:
         if random.randint(0, 1) < success_prob:
             direction_x, direction_y = player.aim_at_opponent(player.targeted_opponent)
-            ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.2)
-            ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.2)
+            ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.15)
+            ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.15)
             ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
         else:
             print(f"{player.name} had a change of heart.")
