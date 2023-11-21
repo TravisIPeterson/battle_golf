@@ -39,6 +39,7 @@ class Player:
         self.targeted_ball = None
         self.action_in_progress = None
         self.action_completed = False
+        self.targeted_opponent = None
 
     @property
     def x(self):
@@ -186,6 +187,9 @@ class Player:
                 # The new position is on another team's green, do not update the position
                 self.action_in_progress = None
                 self.targeted_ball = None
+                # Have the player turn around and move away from the green
+                self.coordinates.x -= direction_x * adjusted_speed
+                self.coordinates.y -= direction_y * adjusted_speed
                 return
 
         # Check if the player has reached the target coordinates and update accordingly
@@ -232,6 +236,9 @@ class Player:
         else:
             # Target green with rivalry score of 1 or 7
             target_green = greens[rivalry_scores.index(random.choice([1, 7]))] if any(i in rivalry_scores for i in [1, 7]) else random.choice(greens)
+        if target_green == self.team_id:
+            # Target green is own team's green, choose a random green instead but not the same one as before
+            target_green = random.choice([green for green in greens if green != self.team_id])
         # Calculate direction towards center of target green, factoring in visual calculus and intelligence
         dx = target_green.hole_x - self.x
         dy = target_green.hole_y - self.y
@@ -242,4 +249,13 @@ class Player:
         wind_direction_vector, wind_speed = wind.get_direction_vector()
         direction_x -= wind_direction_vector[0] * wind_speed * (1 - self.intelligence / 10)  # Higher intelligence leads to better wind adjustment
         direction_y -= wind_direction_vector[1] * wind_speed * (1 - self.intelligence / 10)  # Higher intelligence leads to better wind adjustment
+        return direction_x, direction_y
+    
+    def aim_at_opponent(self, opponent):
+        # Calculate direction towards opponent, factoring in visual calculus and intelligence
+        dx = opponent.x - self.x
+        dy = opponent.y - self.y
+        distance = math.sqrt(dx**2 + dy**2)
+        direction_x = dx / distance * (1 + self.visual_calculus * self.accuracy / 10)
+        direction_y = dy / distance * (1 + self.visual_calculus * self.accuracy / 10)
         return direction_x, direction_y

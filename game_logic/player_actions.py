@@ -12,10 +12,7 @@ def choose_action(balls, players, greens, wind):
 
         # Iterate over each player to determine their action
         for player in players:
-            if player.name == 'Pimento Wolf':
-                print(player.targeted_ball)
-                print(player.action_in_progress)
-                print(player.action_completed)
+
             # If player has an action in progress, continue it
             if player.action_in_progress:
                 action_function = globals()[player.action_in_progress]
@@ -40,6 +37,9 @@ def choose_action(balls, players, greens, wind):
                 if player.targeted_ball:  # Ensure there is a targeted ball
                     proximity = distance(player.coordinates, player.targeted_ball.coordinates)
                     chosen_action = determine_player_action(player, proximity, greens, wind)
+                    if chosen_action == 'precision_hit':
+                        opponents = players.copy()
+                        player.targeted_opponent = choose_opponent_target(player, opponents)
                     player.action_in_progress = chosen_action
 
     except Exception as e:
@@ -53,11 +53,11 @@ def determine_player_action(player, proximity, greens, wind):
     if player.position != 'caddy':
         if proximity < 5 and player.targeted_ball.z < 10:
             if player.position: # == 'driver':
-                if action_determiner <= 1000000:
+                if action_determiner <= 0:
                     chosen_action= 'drive'
-                '''
-                elif action_determiner <= 50:
+                elif action_determiner <= 10000000:
                     chosen_action= 'precision_hit'
+                '''
                 elif action_determiner <= 90:
                     chosen_action = 'hit'
                 else:
@@ -115,23 +115,25 @@ def choose_ball(balls, players, player, greens):
     # Calculate scores for each ball, taking into account the proximity and other factors.
     ball_scores = []
     for ball in balls:
-        # Skip balls that are at maximum targeting capacity or on another team's green
-        if ball_target_count[ball] >= max_targets_per_ball:
-            continue
-        for green in greens:
-            if green.team != player.team_id and green.contains(ball.coordinates.x, ball.coordinates.y):
+        # Only consider balls that have coordinates which appear on screen
+        if ball.coordinates.x > 0 and ball.coordinates.x < 1920 and ball.coordinates.y > 0 and ball.coordinates.y < 1080:
+            # Skip balls that are at maximum targeting capacity or on another team's green
+            if ball_target_count[ball] >= max_targets_per_ball:
                 continue
+            for green in greens:
+                if green.team != player.team_id and green.contains(ball.coordinates.x, ball.coordinates.y):
+                    continue
 
-        # Other scoring remains the same
-        team_score = sum(1 for p in players if p.team_id == player.team_id and p != player and distance(p.coordinates, ball.coordinates) < 10)
-        opposing_score = sum(1 for p in players if p.team_id != player.team_id and distance(p.coordinates, ball.coordinates) < 10)
-        score = (team_score * player.competitiveness / (player.cowardice + 0.1)) - opposing_score
-        score += 10 * ball.last_acted_upon
+            # Other scoring remains the same
+            team_score = sum(1 for p in players if p.team_id == player.team_id and p != player and distance(p.coordinates, ball.coordinates) < 10)
+            opposing_score = sum(1 for p in players if p.team_id != player.team_id and distance(p.coordinates, ball.coordinates) < 10)
+            score = (team_score * player.competitiveness / (player.cowardice + 0.1)) - opposing_score
+            score += 10 * ball.last_acted_upon
 
-        # Adjust score based on how many players are already targeting this ball
-        score /= (1 + ball_target_count[ball])
+            # Adjust score based on how many players are already targeting this ball
+            score /= (1 + ball_target_count[ball])
 
-        ball_scores.append((ball, score))
+            ball_scores.append((ball, score))
 
     # Check if the total sum of scores is greater than zero
     total_score = sum(score for ball, score in ball_scores)
@@ -148,6 +150,15 @@ def choose_ball(balls, players, player, greens):
 
     # Otherwise, return the ball with the highest score
     return ball_scores[0][0]
+
+def choose_opponent_target(player, players):
+    # Choose a player from an opposing team to target
+    opposing_players = [p for p in players if p.team_id != player.team_id]
+    # Cycle through all opponents and multiply charisma by a random number between 1 and 10; lowest charisma becomes target
+    for p in opposing_players:
+        p.target_score = p.charisma * random.randint(1, 10)
+    opposing_players.sort(key=lambda x: x.target_score)
+    return opposing_players[0] 
 
 def distance(coord1, coord2):
     # Calculate the 2D distance between two positions using the Coordinates objects directly
@@ -170,8 +181,8 @@ def drive(player, ball, greens, wind):
     if proximity < 6:
         if random.randint(0, 7) < success_prob:
             direction_x, direction_y = player.aim(greens, wind)
-            ball.velocity[0] += (direction_x * player.power) * 0.07
-            ball.velocity[1] += (direction_y * player.power) * 0.07
+            ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.2)
+            ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.2)
             ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
         else:
             print('drive failed')
@@ -197,16 +208,37 @@ def movement(player):
 def pass_ball(player):
     success_prob = (player.accuracy + player.charisma) / 20.0
     return random.random() < success_prob
-
-def precision_hit(player):
-    if player.position == 'marksman':
-        success_prob = (player.accuracy + player.competitiveness + player.dramatic_flair) / 30.0
-    else:
-        success_prob = (player.accuracy + player.competitiveness + player.dramatic_flair) / 60.0
-    return random.random() < success_prob
 '''
 
+def precision_hit(player, ball, greens, wind):
+    proximity = distance(player.coordinates, ball.coordinates)
+    if player.position == 'marksman':
+        success_prob = player.dramatic_flair + player.savagery + player.accuracy - player.integrity - abs(ball.velocity[0]) - abs(ball.velocity[1])
+    elif player.position == 'driver':
+        success_prob = (player.dramatic_flair + player.savagery + player.accuracy - player.integrity - abs(ball.velocity[0]) - abs(ball.velocity[1])) * 0.5
+    else:
+        success_prob = 110
+    if proximity < 6:
+        if random.randint(0, 1) < success_prob:
+            direction_x, direction_y = player.aim_at_opponent(player.targeted_opponent)
+            ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.2)
+            ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.2)
+            ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
+        else:
+            print(f"{player.name} had a change of heart.")
+    player.action_in_progress = None
+    player.targeted_ball = None
+    player.targeted_opponent = None
+    return True
+
+
 def pursue_ball(player, ball, greens, wind):
+    # If ball coordinates are off screen, action in progress is set to none
+    if ball.coordinates.x < 0 or ball.coordinates.x > 1920 or ball.coordinates.y < 0 or ball.coordinates.y > 1080:
+        player.action_in_progress = None
+        player.targeted_ball = None
+        return True
+    
     prediction_frames = player.get_prediction_frames(ball)
     predicted_x, predicted_y, predicted_z = ball.predict_future_position(prediction_frames)
 

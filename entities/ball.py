@@ -82,7 +82,7 @@ class Ball:
 
         # Check if the ball is over the center of a green and its z is less than 1
         for green in greens:
-            if self.z < 1 and abs(self.x - green.hole_x) < 20 and abs(self.y - green.hole_y) < 20:
+            if self.z < 1 and abs(self.x - green.hole_x) < 10 and abs(self.y - green.hole_y) < 10:
                 self.handle_ball_in_hole(green, teams)
                 break
 
@@ -111,8 +111,8 @@ class Ball:
 
     def adjust_velocity_towards_green_center(self, green):
         direction_x, direction_y = self.direction_toward_center()
-        self.velocity[0] += direction_x * 0.07
-        self.velocity[1] += direction_y * 0.07
+        self.velocity[0] += direction_x * 0.005
+        self.velocity[1] += direction_y * 0.005
 
     def get_wind_effects(self, wind_effect):
         return {
