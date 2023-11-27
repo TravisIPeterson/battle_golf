@@ -14,7 +14,6 @@ class Player:
         self.name = name or self.generate_name()
         self.initials = initials or ''.join([word[0] for word in self.name.split(' ')])
         self.gender = gender or self.invent_gender()
-        self.action_completed = True
         self.accuracy = round(accuracy or random.uniform(1.0, 10.0), 2)
         self.balance = round(balance or random.uniform(1.0, 10.0), 2)
         self.charisma = round(charisma or random.uniform(1.0, 10.0), 2)

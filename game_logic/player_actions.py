@@ -24,8 +24,21 @@ def choose_action(balls, players, greens, wind):
                 # Choose a new ball if the player doesn't have one targeted
                 if player.targeted_ball is None:
                     player.targeted_ball = choose_ball(balls, players, player, greens)
-
+                
+                if player.targeted_ball:
+                    if player.position == 'driver':
+                        determine_driver_action(player, players, player.targeted_ball, greens, wind)
+                    elif player.position == 'blocker':
+                        determine_blocker_action(player, balls, greens, wind)
+                    elif player.position == 'marksman':
+                        determine_marksman_action(player, players, balls, greens, wind)
+                    elif player.position == 'goalie':
+                        determine_goalie_action(player, player.targeted_ball, greens, wind)
+                    elif player.position == 'caddy':
+                        determine_caddy_action(player, players, greens, wind)
                 # Reset the last acted upon turn for the chosen ball
+                '''
+                CODE BEING REFACTORED INTO POSITION-SPECIFIC FUNCTIONS
                 if player.targeted_ball:
                     player.targeted_ball.last_acted_upon = 0
                     # For all other balls, increase the last acted upon counter
@@ -38,14 +51,16 @@ def choose_action(balls, players, greens, wind):
                     proximity = distance(player.coordinates, player.targeted_ball.coordinates)
                     chosen_action = determine_player_action(player, proximity, greens, wind)
                     if chosen_action == 'precision_hit':
-                        opponents = players.copy()
-                        player.targeted_opponent = choose_opponent_target(player, opponents)
                     player.action_in_progress = chosen_action
-
+                '''
     except Exception as e:
         print(f"Error in choose_action: {e}")
         traceback.print_exc()
-        
+
+'''
+CODE BEING BROKEN UP INTO POSITION-SPECIFIC FUNCTIONS
+
+def determine_blocker_action(player, balls, greens, wind):        
 def determine_player_action(player, proximity, greens, wind):
     action_determiner = random.uniform(0, 100)
     chosen_action = 'pursue_ball'
@@ -57,7 +72,6 @@ def determine_player_action(player, proximity, greens, wind):
                     chosen_action= 'drive'
                 elif action_determiner <= 10000000:
                     chosen_action= 'precision_hit'
-                '''
                 elif action_determiner <= 90:
                     chosen_action = 'hit'
                 else:
@@ -85,10 +99,8 @@ def determine_player_action(player, proximity, greens, wind):
                     chosen_action = 'block'
                 else:
                     chosen_action = random.choice(non_caddy_actions)
-            '''
         else:
             chosen_action = 'pursue_ball'
-    '''
     else:
         if proximity < 10:
             chosen_action = 'flee_ball'
@@ -99,8 +111,8 @@ def determine_player_action(player, proximity, greens, wind):
                 chosen_action = 'offer_bribe'
             else:
                 chosen_action = 'hit'
-    '''
     return chosen_action
+'''
 
 def choose_ball(balls, players, player, greens):
     # Track how many players are targeting each ball
@@ -163,6 +175,25 @@ def choose_opponent_target(player, players):
 def distance(coord1, coord2):
     # Calculate the 2D distance between two positions using the Coordinates objects directly
     return ((coord1.x - coord2.x) ** 2 + (coord1.y - coord2.y) ** 2) ** 0.5
+    
+def determine_driver_action(player, players, ball, greens, wind):
+    action_determiner = random.uniform(0, 100)
+    chosen_action = 'pursue_ball'
+    proximity = distance(player.coordinates, ball.coordinates)
+    if proximity < 5 and ball.z < 10:
+        if action_determiner <= 50:
+            chosen_action= 'drive'
+        elif action_determiner <= 10000000:
+            chosen_action= 'precision_hit'
+            opponents = players.copy()
+            player.targeted_opponent = choose_opponent_target(player, opponents)
+        elif action_determiner <= 90:
+            chosen_action = 'hit'
+        else:
+            chosen_action = random.choice(non_caddy_actions)
+    else:
+        chosen_action = 'pursue_ball'
+    player.action_in_progress = chosen_action
 
 def block(player, ball):
     success_prob = (player.balance + player.power + player.solidity)
