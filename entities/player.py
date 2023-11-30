@@ -173,23 +173,24 @@ class Player:
 
         # Calculate the new potential position
         adjusted_speed = ((self.speed + self.metabolism + self.stamina) / self.goutiness) * 0.1
-        if adjusted_speed < 0.25:
-            adjusted_speed = 0.25
+        if adjusted_speed < 0.5:
+            adjusted_speed = 0.5
         if adjusted_speed > 1.75:
             adjusted_speed = 1.75
         new_x = self.coordinates.x + direction_x * adjusted_speed
         new_y = self.coordinates.y + direction_y * adjusted_speed
 
         # Check if the new position is on the green of another team
-        for green in greens:
-            if green.team != self.team_id and green.contains(new_x, new_y):
-                # The new position is on another team's green, do not update the position
-                self.action_in_progress = None
-                self.targeted_ball = None
-                # Have the player turn around and move away from the green
-                self.coordinates.x -= direction_x * adjusted_speed
-                self.coordinates.y -= direction_y * adjusted_speed
-                return
+        if not self.position == 'blocker' or not self.position == 'goalie':
+            for green in greens:
+                if green.team != self.team_id and green.contains(new_x, new_y):
+                    # The new position is on another team's green, do not update the position
+                    self.action_in_progress = None
+                    self.targeted_ball = None
+                    # Have the player turn around and move away from the green
+                    self.coordinates.x -= direction_x * adjusted_speed
+                    self.coordinates.y -= direction_y * adjusted_speed
+                    return
 
         # Check if the player has reached the target coordinates and update accordingly
         if (new_x - target_x)**2 + (new_y - target_y)**2 < adjusted_speed**2:
@@ -212,7 +213,7 @@ class Player:
 
         intelligence_factor = self.intelligence / random.uniform(5, 10)
         visual_calculus_factor = self.visual_calculus / random.uniform(5, 10)
-        frames_adjustment = (intelligence_factor + visual_calculus_factor) / 2
+        frames_adjustment = (intelligence_factor + visual_calculus_factor)
 
         final_prediction_frames = max(1, frames_ahead * frames_adjustment)
 

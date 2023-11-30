@@ -1,6 +1,9 @@
 import random
 import traceback
 from entities.ball import Ball
+from action_helpers import distance, choose_ball
+from blocker_actions import determine_blocker_action
+from driver_actions import determine_driver_action
 
 non_caddy_actions = ['block', 'drive', 'hit', 'idle', 'movement', 'pass_ball', 'precision_hit']
 
@@ -31,11 +34,11 @@ def choose_action(balls, players, greens, wind):
                     elif player.position == 'blocker':
                         determine_blocker_action(player, balls, greens, wind)
                     elif player.position == 'marksman':
-                        determine_marksman_action(player, players, balls, greens, wind)
+                        determine_driver_action(player, players, player.targeted_ball, greens, wind)
                     elif player.position == 'goalie':
-                        determine_goalie_action(player, player.targeted_ball, greens, wind)
+                        determine_driver_action(player, players, player.targeted_ball, greens, wind)
                     elif player.position == 'caddy':
-                        determine_caddy_action(player, players, greens, wind)
+                        determine_driver_action(player, players, player.targeted_ball, greens, wind)
                 # Reset the last acted upon turn for the chosen ball
                 '''
                 CODE BEING REFACTORED INTO POSITION-SPECIFIC FUNCTIONS
@@ -114,88 +117,7 @@ def determine_player_action(player, proximity, greens, wind):
     return chosen_action
 '''
 
-def choose_ball(balls, players, player, greens):
-    # Track how many players are targeting each ball
-    ball_target_count = {ball: 0 for ball in balls}
-    for p in players:
-        if p.targeted_ball:
-            ball_target_count[p.targeted_ball] += 1
-
-    # Maximum number of players that can target the same ball
-    max_targets_per_ball = len(players) // len(balls)
-
-    # Calculate scores for each ball, taking into account the proximity and other factors.
-    ball_scores = []
-    for ball in balls:
-        # Only consider balls that have coordinates which appear on screen
-        if ball.coordinates.x > 0 and ball.coordinates.x < 1920 and ball.coordinates.y > 0 and ball.coordinates.y < 1080:
-            # Skip balls that are at maximum targeting capacity or on another team's green
-            if ball_target_count[ball] >= max_targets_per_ball:
-                continue
-            for green in greens:
-                if green.team != player.team_id and green.contains(ball.coordinates.x, ball.coordinates.y):
-                    continue
-
-            # Other scoring remains the same
-            team_score = sum(1 for p in players if p.team_id == player.team_id and p != player and distance(p.coordinates, ball.coordinates) < 10)
-            opposing_score = sum(1 for p in players if p.team_id != player.team_id and distance(p.coordinates, ball.coordinates) < 10)
-            score = (team_score * player.competitiveness / (player.cowardice + 0.1)) - opposing_score
-            score += 10 * ball.last_acted_upon
-
-            # Adjust score based on how many players are already targeting this ball
-            score /= (1 + ball_target_count[ball])
-
-            ball_scores.append((ball, score))
-
-    # Check if the total sum of scores is greater than zero
-    total_score = sum(score for ball, score in ball_scores)
-    if total_score <= 0:
-        # If total score is not greater than zero, select a ball randomly
-        return random.choice(balls)
-
-    # Sort the balls by their score
-    ball_scores.sort(key=lambda x: x[1], reverse=True)
-
-    # Check if the highest score is negative, and if so, choose a ball randomly
-    if ball_scores[0][1] < 0:
-        return random.choice(balls)
-
-    # Otherwise, return the ball with the highest score
-    return ball_scores[0][0]
-
-def choose_opponent_target(player, players):
-    # Choose a player from an opposing team to target
-    opposing_players = [p for p in players if p.team_id != player.team_id]
-    # Cycle through all opponents and multiply charisma by a random number between 1 and 10; lowest charisma becomes target
-    for p in opposing_players:
-        p.target_score = p.charisma * random.randint(1, 10)
-    opposing_players.sort(key=lambda x: x.target_score)
-    return opposing_players[0] 
-
-def distance(coord1, coord2):
-    # Calculate the 2D distance between two positions using the Coordinates objects directly
-    return ((coord1.x - coord2.x) ** 2 + (coord1.y - coord2.y) ** 2) ** 0.5
-    
-def determine_driver_action(player, players, ball, greens, wind):
-    action_determiner = random.uniform(0, 100)
-    chosen_action = 'pursue_ball'
-    proximity = distance(player.coordinates, ball.coordinates)
-    if proximity < 5 and ball.z < 10:
-        if action_determiner <= 50:
-            chosen_action= 'drive'
-        elif action_determiner <= 10000000:
-            chosen_action= 'precision_hit'
-            opponents = players.copy()
-            player.targeted_opponent = choose_opponent_target(player, opponents)
-        elif action_determiner <= 90:
-            chosen_action = 'hit'
-        else:
-            chosen_action = random.choice(non_caddy_actions)
-    else:
-        chosen_action = 'pursue_ball'
-    player.action_in_progress = chosen_action
-
-def block(player, ball):
+def block(player, ball, greens, wind):
     success_prob = (player.balance + player.power + player.solidity)
     if random.randint(0, 20) < success_prob:
         ball.x = player.x

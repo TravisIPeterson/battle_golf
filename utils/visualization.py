@@ -36,9 +36,7 @@ def draw_game_state(players, greens, balls, wall, wind, teams, screen):
     for player in players:
         x = player.coordinates.x
         y = player.coordinates.y
-        if player.position == 'blocker':
-            pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 15)  # Larger circle for the border
-
+       
         pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 11)
         pygame.draw.circle(screen, TEAM_COLORS[player.team_id], (int(x), int(y)), 10)
 
