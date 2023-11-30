@@ -1,7 +1,9 @@
 import random
 import traceback
+import math
+from game_state import Coordinates
 from entities.ball import Ball
-from action_helpers import distance, choose_ball
+from action_helpers import distance, choose_ball, choose_teammate_target
 from blocker_actions import determine_blocker_action
 from driver_actions import determine_driver_action
 
@@ -19,7 +21,7 @@ def choose_action(balls, players, greens, wind):
             # If player has an action in progress, continue it
             if player.action_in_progress:
                 action_function = globals()[player.action_in_progress]
-                action_completed = action_function(player, player.targeted_ball, greens, wind)
+                action_completed = action_function(player, players, player.targeted_ball, greens, wind)
                 if action_completed:
                     player.action_in_progress = None
                     player.targeted_ball = None
@@ -32,30 +34,14 @@ def choose_action(balls, players, greens, wind):
                     if player.position == 'driver':
                         determine_driver_action(player, players, player.targeted_ball, greens, wind)
                     elif player.position == 'blocker':
-                        determine_blocker_action(player, balls, greens, wind)
+                        determine_blocker_action(player, players, balls, greens, wind)
                     elif player.position == 'marksman':
                         determine_driver_action(player, players, player.targeted_ball, greens, wind)
                     elif player.position == 'goalie':
                         determine_driver_action(player, players, player.targeted_ball, greens, wind)
                     elif player.position == 'caddy':
                         determine_driver_action(player, players, player.targeted_ball, greens, wind)
-                # Reset the last acted upon turn for the chosen ball
-                '''
-                CODE BEING REFACTORED INTO POSITION-SPECIFIC FUNCTIONS
-                if player.targeted_ball:
-                    player.targeted_ball.last_acted_upon = 0
-                    # For all other balls, increase the last acted upon counter
-                    for b in balls:
-                        if b != player.targeted_ball:
-                            b.last_acted_upon += 1
 
-                # Determine the player's action
-                if player.targeted_ball:  # Ensure there is a targeted ball
-                    proximity = distance(player.coordinates, player.targeted_ball.coordinates)
-                    chosen_action = determine_player_action(player, proximity, greens, wind)
-                    if chosen_action == 'precision_hit':
-                    player.action_in_progress = chosen_action
-                '''
     except Exception as e:
         print(f"Error in choose_action: {e}")
         traceback.print_exc()
@@ -117,18 +103,20 @@ def determine_player_action(player, proximity, greens, wind):
     return chosen_action
 '''
 
-def block(player, ball, greens, wind):
+def block(player, players, ball, greens, wind):
     success_prob = (player.balance + player.power + player.solidity)
-    if random.randint(0, 20) < success_prob:
+    if random.randint(0, 30) < success_prob:
         ball.x = player.x
         ball.y = player.y
         ball.velocity = [0, 0, 0]  # Reset all components of the velocity
+        player.targeted_opponent = choose_teammate_target(player, players)
+        player.action_in_progress = 'pass_ball'
 
 # def dive(player):
 #    success_prob = (player.speed + player.balance + player.solidity)
 #    return random.random() < success_prob
 
-def drive(player, ball, greens, wind):
+def drive(player, players, ball, greens, wind):
     proximity = distance(player.coordinates, ball.coordinates)
     success_prob = player.competitiveness + player.visual_calculus - abs(ball.velocity[0]) - abs(ball.velocity[1])
     if proximity < 6:
@@ -141,7 +129,7 @@ def drive(player, ball, greens, wind):
             print('drive failed')
             if player.tenacity > random.uniform(6, 10) and proximity < 6:  # Retry if tenacity is high and ball is still near
                 print('retrying drive')
-                return drive(player, ball, greens, wind)
+                return drive(player, players, ball, greens, wind)
     player.action_in_progress = None
     player.targeted_ball = None
     return True
@@ -153,17 +141,49 @@ def hit(player):
 
 def idle(player):
     return True
+'''
 
+def mill_about(player, players, ball, greens, wind):
+    # Define the range of random offsets (within 20 units from the edge of the green)
+    offset_range = 20
+
+    while True:
+        # Randomly choose an angle
+        angle = random.uniform(0, 2 * math.pi)
+
+        # Calculate the random offset distance from the green's edge
+        offset_distance = random.uniform(0, offset_range)
+        green = next((green for green in greens if green.team == player.team_id), None)
+
+        # Calculate the target coordinates
+        target_x = green.x + (green.radius + offset_distance) * math.cos(angle)
+        target_y = green.y + (green.radius + offset_distance) * math.sin(angle)
+        coord = Coordinates(target_x, target_y, 0)
+
+        # Check if the target is at least 50 units away from the player's current position
+        if distance(player.coordinates, coord) >= 50:
+            break
+
+    player.move((target_x, target_y), greens, wind)
+
+'''
 def movement(player):
     success_prob = (player.speed + player.balance) / 20.0
     return random.ran
         print(player.coordinates)
-def pass_ball(player):
-    success_prob = (player.accuracy + player.charisma) / 20.0
-    return random.random() < success_prob
 '''
 
-def precision_hit(player, ball, greens, wind):
+def pass_ball(player, players, ball, greens, wind):
+    direction_x, direction_y = player.aim_at_opponent(player.targeted_opponent)
+    ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.15)
+    ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.15)
+    ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
+    player.targeted_opponent.targeted_ball = ball
+    player.action_in_progress = None
+    player.targeted_ball = None
+    return True
+
+def precision_hit(player, players, ball, greens, wind):
     proximity = distance(player.coordinates, ball.coordinates)
     if player.position == 'marksman':
         success_prob = player.dramatic_flair + player.savagery + player.accuracy - player.integrity - abs(ball.velocity[0]) - abs(ball.velocity[1])
@@ -185,7 +205,7 @@ def precision_hit(player, ball, greens, wind):
     return True
 
 
-def pursue_ball(player, ball, greens, wind):
+def pursue_ball(player, players, ball, greens, wind):
     # If ball coordinates are off screen, action in progress is set to none
     if ball.coordinates.x < 0 or ball.coordinates.x > 1920 or ball.coordinates.y < 0 or ball.coordinates.y > 1080:
         player.action_in_progress = None

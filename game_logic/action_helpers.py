@@ -54,9 +54,18 @@ def choose_opponent_target(player, players):
     opposing_players = [p for p in players if p.team_id != player.team_id]
     # Cycle through all opponents and multiply charisma by a random number between 1 and 10; lowest charisma becomes target
     for p in opposing_players:
-        p.target_score = p.charisma * random.randint(1, 10)
+        p.target_score = p.charisma * random.random()
     opposing_players.sort(key=lambda x: x.target_score)
     return opposing_players[0] 
+
+def choose_teammate_target(player, players):
+    # Choose a player from the same team to target
+    team_players = [p for p in players if p.team_id == player.team_id and player.name != p.name]
+    # Cycle through all teammates and multiply charisma by a random number between 1 and 10; highest charisma becomes target
+    for p in team_players:
+        p.target_score = (p.integrity + p.neoliberalism) * random.random()
+    team_players.sort(key=lambda x: x.target_score)
+    return team_players[0]
 
 def distance(coord1, coord2):
     # Calculate the 2D distance between two positions using the Coordinates objects directly
@@ -84,7 +93,7 @@ def find_approaching_balls(player, balls, green):
 def find_blocker_green(player, greens):
     return next((green for green in greens if green.team == player.team_id), None)
 
-def intercept_ball(player, ball, greens, wind):
+def intercept_ball(player, players, ball, greens, wind):
     if ball.coordinates.z > 20:
         return "unreachable"
     # Base factors from player attributes
@@ -135,7 +144,7 @@ def intercept_ball(player, ball, greens, wind):
         return "ongoing"
 
 def is_player_near_green(player, green, greens):
-    offset_range = [20, -20]
+    offset_range = [30, -30]
 
     return any(green.contains(player.x + dx, player.y + dy) for dx in offset_range for dy in offset_range)
 

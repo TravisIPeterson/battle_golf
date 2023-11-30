@@ -256,6 +256,10 @@ class Player:
         dx = opponent.x - self.x
         dy = opponent.y - self.y
         distance = math.sqrt(dx**2 + dy**2)
+
+        if distance == 0:
+            distance = 1
+            
         direction_x = dx / distance * (1 + self.visual_calculus * self.accuracy / 10)
         direction_y = dy / distance * (1 + self.visual_calculus * self.accuracy / 10)
         return direction_x, direction_y
