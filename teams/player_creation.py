@@ -57,6 +57,7 @@ class Database:
                 speed REAL,
                 stamina REAL,
                 tenacity REAL,
+                twitchiness REAL,
                 visual_calculus REAL,
                 FOREIGN KEY (team_id) REFERENCES teams (id)
             )
@@ -67,7 +68,7 @@ class Database:
         team_id = self.cursor.lastrowid
 
         for player in team.players:
-            self.cursor.execute('INSERT INTO players (team_id, name, initials, gender, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, visual_calculus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (team_id, player.name, player.initials, player.gender, player.position, player.accuracy, player.balance, player.charisma, player.competitiveness, player.cowardice, player.dramatic_flair, player.goutiness, player.greed, player.integrity, player.intelligence, player.metabolism, player.neoliberalism, player.power, player.savagery, player.solidity, player.speed, player.stamina, player.tenacity, player.visual_calculus))
+            self.cursor.execute('INSERT INTO players (team_id, name, initials, gender, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, twitchiness, visual_calculus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (team_id, player.name, player.initials, player.gender, player.position, player.accuracy, player.balance, player.charisma, player.competitiveness, player.cowardice, player.dramatic_flair, player.goutiness, player.greed, player.integrity, player.intelligence, player.metabolism, player.neoliberalism, player.power, player.savagery, player.solidity, player.speed, player.stamina, player.tenacity, player.twitchiness, player.visual_calculus))
 
         self.conn.commit()
 
@@ -81,7 +82,7 @@ class Database:
 db = Database('battle_golf.db')
 db.create_tables()
 
-positions = ['driver', 'driver', 'blocker', 'blocker', 'marksman', 'goalie', 'caddy']
+positions = ['driver', 'driver', 'blocker', 'blocker', 'goalie', 'caddy']
 
 teams = []
 

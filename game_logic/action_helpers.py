@@ -61,7 +61,6 @@ def choose_opponent_target(player, players):
 def choose_teammate_target(player, players):
     # Choose a player from the same team to target
     team_players = [p for p in players if p.team_id == player.team_id and player.name != p.name]
-    # Cycle through all teammates and multiply charisma by a random number between 1 and 10; highest charisma becomes target
     for p in team_players:
         p.target_score = (p.integrity + p.neoliberalism) * random.random()
     team_players.sort(key=lambda x: x.target_score)
@@ -71,24 +70,10 @@ def distance(coord1, coord2):
     # Calculate the 2D distance between two positions using the Coordinates objects directly
     return ((coord1.x - coord2.x) ** 2 + (coord1.y - coord2.y) ** 2) ** 0.5
 
-def find_approaching_balls(player, balls, green):
-    approaching_balls = []
-    intelligence_factor = player.intelligence / random.uniform(5, 10)
-    visual_calculus_factor = player.visual_calculus / random.uniform(5, 10)
-    precognition = (intelligence_factor + visual_calculus_factor)
 
-    for ball in balls:
-        future_x = ball.coordinates.x + ball.velocity[0] * precognition
-        future_y = ball.coordinates.y + ball.velocity[1] * precognition
-        future_z = ball.coordinates.z + ball.velocity[2] * precognition
+def find_approaching_balls(player, balls):
+    return sorted(balls, key=lambda ball: distance(player.coordinates, ball.coordinates))
 
-        offset_range = [20, -20]
-
-        if any(green.contains(future_x + dx, future_y + dy) and future_z < 20 for dx in offset_range for dy in offset_range):
-            approaching_balls.append(ball)
-
-    approaching_balls.sort(key=lambda b: distance(player.coordinates, b.coordinates))
-    return approaching_balls
 
 def find_blocker_green(player, greens):
     return next((green for green in greens if green.team == player.team_id), None)
@@ -137,14 +122,16 @@ def intercept_ball(player, players, ball, greens, wind):
     # Move the player toward the adjusted target position
     player.move((target_x, target_y), greens, wind)
 
-    # Return True if the player is close enough to the ball to interact with it
-    if distance(player.coordinates, ball.coordinates) < 5:
+    # Determine if the player is close enough to the ball to interact with it
+    if distance(player.coordinates, ball.coordinates) < 1:
         return "reached"
+    elif distance(player.coordinates, ball.coordinates) * player.tenacity > 500:
+        return "unreachable"
     else:
         return "ongoing"
 
 def is_player_near_green(player, green, greens):
-    offset_range = [30, -30]
+    offset_range = [40, -40]
 
     return any(green.contains(player.x + dx, player.y + dy) for dx in offset_range for dy in offset_range)
 
@@ -157,7 +144,7 @@ def move_toward_green(player, green, greens):
         direction_x /= distance_from_center
         direction_y /= distance_from_center
 
-    target_x = green.x + direction_x * (green.radius + 20)
-    target_y = green.y + direction_y * (green.radius + 20)
+    target_x = green.x + direction_x * (green.radius + 40)
+    target_y = green.y + direction_y * (green.radius + 40)
 
-    player.move((target_x, target_y), greens, greens) #Wind not needed for function so passing greens an additional time to avoid error because I'm lazy
+    player.move((target_x, target_y), greens, greens) # Wind not needed for function so passing greens an additional time to avoid error because I'm lazy

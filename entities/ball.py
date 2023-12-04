@@ -22,6 +22,7 @@ class Ball:
         self.wall = wall
         self.last_acted_upon = 0
         self.in_hole = False
+        self.last_hit_by = None
     
     @property
     def x(self):
@@ -82,7 +83,7 @@ class Ball:
 
         # Check if the ball is over the center of a green and its z is less than 1
         for green in greens:
-            if self.z < 1 and abs(self.x - green.hole_x) < 10 and abs(self.y - green.hole_y) < 10:
+            if self.z < 1 and abs(self.x - green.hole_x) < 5 and abs(self.y - green.hole_y) < 5:
                 self.handle_ball_in_hole(green, teams)
                 break
 

@@ -19,7 +19,7 @@ class Wall:
 
         self.x = center_x
         self.y = center_y
-        self.radius = radius
+        self.radius = radius + 40
         self.thickness = 5
 
     def draw(self, screen):

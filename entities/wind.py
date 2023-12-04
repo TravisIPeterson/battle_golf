@@ -17,9 +17,7 @@ class Wind:
         current_time = pygame.time.get_ticks()
 
         # Check if it's time to tone down a strong gust
-        if (self.last_strong_gust_time and 
-            current_time - self.last_strong_gust_time >= self.strong_gust_duration and
-            self.speed > 5):  # Check if the speed is above 5 for a strong gust
+        if (self.last_strong_gust_time and current_time - self.last_strong_gust_time >= self.strong_gust_duration and self.speed > 5):  # Check if the speed is above 5 for a strong gust
             self.speed = random.uniform(0, 5)  # Reduce the speed
             self.last_strong_gust_time = None  # Reset the gust time so we don't keep reducing
 
@@ -57,7 +55,7 @@ class Wind:
 
 
     def effect_on_ball(self, height_multiplier):
-        effect = self.speed * height_multiplier * 0.005
+        effect = self.speed * height_multiplier * 0.01
         return (effect, self.direction)
     
     def get_direction_vector(self):

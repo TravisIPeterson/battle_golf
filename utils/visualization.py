@@ -13,7 +13,7 @@ BORDER_COLOR = (255, 255, 255)
 TEAM_COLORS = {
     1: (255, 0, 0),
     2: (0, 255, 0),
-    3: (0, 0, 255),
+    3: (0, 150, 255),
     4: (0, 255, 255),
     5: (255, 255, 0),
     6: (128, 128, 0),
@@ -30,15 +30,15 @@ def draw_game_state(players, greens, balls, wall, wind, teams, screen):
     # Draw the greens
     for green in greens:
         pygame.draw.circle(screen, GREEN_COLOR, (int(green.x), int(green.y)), int(green.radius))
-        pygame.draw.circle(screen, BLACK_COLOR, (int(green.hole_x), int(green.hole_y)), int(green.radius * 0.05))
+        pygame.draw.circle(screen, BLACK_COLOR, (int(green.hole_x), int(green.hole_y)), int(green.radius * 0.025))
 
     # Draw players
     for player in players:
         x = player.coordinates.x
         y = player.coordinates.y
        
-        pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 11)
-        pygame.draw.circle(screen, TEAM_COLORS[player.team_id], (int(x), int(y)), 10)
+        pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 8)
+        pygame.draw.circle(screen, TEAM_COLORS[player.team_id], (int(x), int(y)), 8)
 
         text_surface = PLAYER_FONT.render(player.initials, True, (0, 0, 0))
         text_rect = text_surface.get_rect(center=(x, y))

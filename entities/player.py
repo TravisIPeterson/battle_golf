@@ -8,7 +8,7 @@ class Player:
     def __init__(self, team_id, position, name=None, initials=None, gender=None, accuracy=None, balance=None, charisma=None,
                  competitiveness=None, cowardice=None, dramatic_flair=None, goutiness=None,
                  greed=None, integrity=None, intelligence=None, metabolism = None, neoliberalism=None, power=None, savagery=None,
-                 solidity=None, speed=None, stamina=None, tenacity=None, visual_calculus=None):
+                 solidity=None, speed=None, stamina=None, tenacity=None, twitchiness=None, visual_calculus=None):
         self.team_id = team_id
         self.position = position
         self.name = name or self.generate_name()
@@ -32,13 +32,16 @@ class Player:
         self.speed = round(speed or random.uniform(1.0, 10.0), 2)
         self.stamina = round(stamina or random.uniform(1.0, 10.0), 2)
         self.tenacity = round(tenacity or random.uniform(1.0, 10.0), 2)
+        self.twitchiness = round(random.uniform(1.0, 10.0), 2)
         self.visual_calculus = round(visual_calculus or random.uniform(1.0, 10.0), 2)
-        self.weighted_stats(position, self.accuracy, self.balance, self.charisma, self.competitiveness, self.cowardice, self.dramatic_flair, self.goutiness, self.greed, self.integrity, self.intelligence, self.metabolism, self.neoliberalism, self.power, self.savagery, self.solidity, self.speed, self.stamina, self.tenacity, self.visual_calculus)
+        self.weighted_stats(position, self.accuracy, self.balance, self.charisma, self.competitiveness, self.cowardice, self.dramatic_flair, self.goutiness, self.greed, self.integrity, self.intelligence, self.metabolism, self.neoliberalism, self.power, self.savagery, self.solidity, self.speed, self.stamina, self.tenacity, self.twitchiness, self.visual_calculus)
         self.coordinates = Coordinates()
         self.targeted_ball = None
         self.action_in_progress = None
         self.action_completed = False
         self.targeted_opponent = None
+        self.target_coordinates = self.coordinates
+        self.personal_clock = 0
 
     @property
     def x(self):
@@ -67,7 +70,7 @@ class Player:
 
         return gender
 
-    def weighted_stats(self, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, visual_calculus):
+    def weighted_stats(self, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, twitchiness, visual_calculus):
         if position == 'driver':
             accuracy *= random.uniform(1.0, 1.3)
             power *= random.uniform(1.0, 1.7)
@@ -80,7 +83,7 @@ class Player:
             greed *= random.uniform(1.1, 1.2)
             power *= random.uniform(0.2, 0.6)
             solidity *= random.uniform(1.1, 1.4)
-            speed *= random.uniform(1.1, 1.4)
+            speed *= random.uniform(1.5, 2.0)
         elif position == 'marksman':
             accuracy *= random.uniform(1.2, 1.6)
             competitiveness *= random.uniform(1.5, 2.5)
@@ -108,6 +111,7 @@ class Player:
             integrity *= random.uniform(1.5, 2.0)
             intelligence *= random.uniform(0.4, 0.99)
             savagery *= random.uniform(0.5, 0.8)
+            twitchiness *= random.uniform(1.1, 2.0)
         else:
             accuracy *= random.uniform(0.8, 1.2)
             power *= random.uniform(0.8, 1.2)
@@ -119,7 +123,7 @@ class Player:
         conn = sqlite3.connect('../teams/battle_golf.db')
         cursor = conn.cursor()
 
-        cursor.execute("SELECT team_id, name, initials, gender, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, visual_calculus FROM players")
+        cursor.execute("SELECT team_id, name, initials, gender, position, accuracy, balance, charisma, competitiveness, cowardice, dramatic_flair, goutiness, greed, integrity, intelligence, metabolism, neoliberalism, power, savagery, solidity, speed, stamina, tenacity, twitchiness, visual_calculus FROM players")
         data = cursor.fetchall()
 
         conn.close()
@@ -150,7 +154,8 @@ class Player:
                 speed=row[20],
                 stamina=row[21],
                 tenacity=row[22],
-                visual_calculus=row[23]
+                twitchiness=row[23],
+                visual_calculus=row[24]
             )
             player.coordinates = Coordinates()
             players.append(player)
@@ -222,6 +227,8 @@ class Player:
     def aim(self, greens, wind):
         # Calculate rivalry scores
         rivalry_scores = [(self.team_id - green.team) % 8 for green in greens]
+        # Sort greens by rivalry score (ascending)
+        greens = [green for _, green in sorted(zip(rivalry_scores, greens))]
         # Select target green based on competitiveness, dramatic flair, and cowardice
         feeling_feisty = self.competitiveness * self.dramatic_flair / (self.cowardice + self.savagery)
         if feeling_feisty > random.uniform(7, 10):
@@ -271,14 +278,15 @@ class Player:
         distance = math.sqrt(dx**2 + dy**2)
 
         # Calculate the chance of hitting the ball
-        if distance < 1 and random.random() < 0.01:
-            if (ball.velocity[0] * ball.velocity[1]) > (self.solidity * self.metabolism  + self.balance + self.tenacity) / self.goutiness:
-                if self.position == 'blocker' and random.random() < 0.2:
-                    return False
-                if self.position == 'goalie' and random.random() < 0.2:
-                    return False
+        if ball.last_hit_by:
+            if distance < 1 and random.random() < 0.01 and ball.last_hit_by.team_id != self.team_id:
+                if (ball.velocity[0] * ball.velocity[1]) > (self.solidity * self.metabolism  + self.balance + self.tenacity) / self.goutiness:
+                    if self.position == 'blocker' and random.random() < 0.2:
+                        return False
+                    if self.position == 'goalie' and random.random() < 0.2:
+                        return False
+                    return True
                 return True
-            return True
             
     def calculate_hit_consequences(self, ball):
         variable_names = {
@@ -300,6 +308,7 @@ class Player:
             'speed': self.speed,
             'stamina': self.stamina,
             'tenacity': self.tenacity,
+            'twitchiness': self.twitchiness,
             'visual_calculus': self.visual_calculus
         }
     # Divide a random player stat by velocity of the ball

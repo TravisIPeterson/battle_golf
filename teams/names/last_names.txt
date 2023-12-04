@@ -42,6 +42,7 @@ Glockenspiel
 Goldensong
 Greenfield
 Guacbowl
+Haha
 Hammer
 Haverbrook
 Hickman
@@ -68,6 +69,7 @@ McGuffin
 McReery
 Meadowfair
 Meander
+Michio
 Micky
 Moonshadow
 Montague
@@ -82,6 +84,7 @@ Nice
 None
 O'Brien
 Oakenshield
+Pantry
 Pete
 Pig
 Pines
@@ -108,6 +111,7 @@ Tofu
 Todd
 Triumphant
 Union
+Valenzuela
 Valewind
 Vexley
 Westbrooke

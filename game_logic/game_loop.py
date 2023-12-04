@@ -63,6 +63,7 @@ def place_players_on_greens(greens):
         corresponding_green = next(g for g in greens if g.team == team)
         x, y = generate_players_within_green(corresponding_green)
         player.coordinates = Coordinates(x, y)  # Set the coordinates directly as a Coordinates object
+        player.target_coordinates = player.coordinates
 
     return players
 
@@ -73,7 +74,7 @@ def create_balls(wall, wind):
         center_x, center_y = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
         safe_radius = wall.radius * 0.9
         start_x, start_y = random_point_inside_circle(center_x, center_y, safe_radius)
-        ball = Ball(start_x, start_y, 1.5, wall, wind)
+        ball = Ball(start_x, start_y, 1, wall, wind)
         balls.append(ball)
 
     return balls
