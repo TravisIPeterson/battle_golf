@@ -177,11 +177,18 @@ class Player:
             direction_y /= distance_to_target
 
         # Calculate the new potential position
-        adjusted_speed = ((self.speed + self.metabolism + self.stamina) / self.goutiness) * 0.1
-        if adjusted_speed < 0.5:
-            adjusted_speed = 0.5
-        if adjusted_speed > 1.75:
-            adjusted_speed = 1.75
+        if self.action_in_progress == 'mill_about':
+            adjusted_speed = ((self.speed + self.metabolism + self.stamina) / self.goutiness) * 0.05
+            if adjusted_speed < 0.25:
+                adjusted_speed = 0.25
+            if adjusted_speed > 1:
+                adjusted_speed = 1
+        else:
+            adjusted_speed = ((self.speed + self.metabolism + self.stamina) / self.goutiness) * 0.1
+            if adjusted_speed < 0.5:
+                adjusted_speed = 0.5
+            if adjusted_speed > 1.75:
+                adjusted_speed = 1.75
         new_x = self.coordinates.x + direction_x * adjusted_speed
         new_y = self.coordinates.y + direction_y * adjusted_speed
 

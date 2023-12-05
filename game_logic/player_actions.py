@@ -3,7 +3,7 @@ import traceback
 import math
 from game_state import Coordinates
 from entities.ball import Ball
-from action_helpers import distance, choose_ball, choose_teammate_target
+from action_helpers import distance, choose_ball, choose_teammate_target, find_approaching_balls
 from blocker_actions import determine_blocker_action
 from driver_actions import determine_driver_action
 from marksman_actions import determine_marksman_action
@@ -22,7 +22,11 @@ def choose_action(balls, players, greens, wind):
             # If player has an action in progress, continue it
             if player.action_in_progress:
                 action_function = globals()[player.action_in_progress]
-                action_completed = action_function(player, players, player.targeted_ball, greens, wind)
+                if player.action_in_progress == "mill_about":
+                    action_completed = action_function(player, players, balls, greens, wind)
+                else:
+                    action_completed = action_function(player, players, player.targeted_ball, greens, wind)
+
                 if action_completed:
                     player.action_in_progress = None
                     player.targeted_ball = None
@@ -88,7 +92,7 @@ def hit(player):
     return random.random() < success_prob
 '''
 
-def mill_about(player, players, ball, greens, wind):
+def mill_about(player, players, balls, greens, wind):
     # Check if the player already has a target to mill about
     if distance(player.coordinates, player.target_coordinates) < 5:
         # Define the range of random offsets (within 20 units from the edge of the green)
@@ -113,6 +117,12 @@ def mill_about(player, players, ball, greens, wind):
             if distance(player.coordinates, coord) >= 50:
                 player.target_coordinates = coord
                 break
+    
+    stay_vigilant = find_approaching_balls(player, balls)
+
+    if distance(player.coordinates, stay_vigilant[0].coordinates) < (player.twitchiness * 10):
+        player.action_in_progress = None
+        return True
                 
     # Move the player toward the target position
     player.move(player.target_coordinates, greens, wind)

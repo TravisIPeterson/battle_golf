@@ -9,15 +9,13 @@ def determine_blocker_action(player, players, balls, greens, wind):
         move_toward_green(player, blocker_green, greens)
         return
 
-    # Mill about randomly based on twitchiness
-    if random.randint(7, 10) < player.twitchiness * random.random():
-        player.action_in_progress = "mill_about"
-
     # Sort balls by proximity
     balls_sorted_by_proximity = find_approaching_balls(player, balls)
 
     # Select the nearest ball
-    if balls_sorted_by_proximity:
+    if distance(player.coordinates, balls_sorted_by_proximity[0].coordinates) > 100:
+        player.action_in_progress = "mill_about"
+    else:
         player.targeted_ball = balls_sorted_by_proximity[0]
         intercept_status = intercept_ball(player, players, player.targeted_ball, greens, wind)
 
@@ -29,8 +27,8 @@ def determine_blocker_action(player, players, balls, greens, wind):
                 player.action_in_progress = "mill_about"
             else: 
                 balls_sorted_by_proximity = find_approaching_balls(player, balls)
-            if balls_sorted_by_proximity:
-                player.targeted_ball = balls_sorted_by_proximity[0]
-                intercept_ball(player, players, player.targeted_ball, greens, wind)
+                if balls_sorted_by_proximity:
+                    player.targeted_ball = balls_sorted_by_proximity[0]
+                    intercept_ball(player, players, player.targeted_ball, greens, wind)
         else:
             player.action_in_progress = None
