@@ -98,9 +98,10 @@ class Player:
             balance *= random.uniform(1.1, 1.7)
             cowardice *= random.uniform(0.5, 0.8)
             dramatic_flair *= random.uniform(1.1, 1.6)
+            power *= random.uniform(1.5, 2.0)
             solidity *= random.uniform(1.1, 1.6)
             stamina *= random.uniform(1.2, 1.6)
-            speed *= random.uniform(1.0, 1.5)
+            speed *= random.uniform(0.5, 0.7)
         elif position == 'caddy':
             charisma *= random.uniform(1.1, 1.6)
             competitiveness *= random.uniform(1.1, 1.6)

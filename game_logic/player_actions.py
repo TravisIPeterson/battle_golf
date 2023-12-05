@@ -7,6 +7,7 @@ from action_helpers import distance, choose_ball, choose_teammate_target, find_a
 from blocker_actions import determine_blocker_action
 from driver_actions import determine_driver_action
 from marksman_actions import determine_marksman_action
+from goalie_actions import determine_goalie_action
 
 non_caddy_actions = ['block', 'drive', 'hit', 'idle', 'movement', 'pass_ball', 'precision_hit']
 
@@ -43,7 +44,7 @@ def choose_action(balls, players, greens, wind):
                     elif player.position == 'marksman':
                         determine_marksman_action(player, players, player.targeted_ball, greens, wind)
                     elif player.position == 'goalie':
-                        determine_driver_action(player, players, player.targeted_ball, greens, wind)
+                        determine_goalie_action(player, players, balls, greens, wind)
                     elif player.position == 'caddy':
                         determine_driver_action(player, players, player.targeted_ball, greens, wind)
 
@@ -52,7 +53,7 @@ def choose_action(balls, players, greens, wind):
         traceback.print_exc()
 
 def block(player, players, ball, greens, wind):
-    if distance(player.coordinates, ball.coordinates) < 1:
+    if distance(player.coordinates, ball.coordinates) < 5:
         success_prob = (player.balance + player.power + player.solidity)
         if random.randint(0, 30) < success_prob and ball.last_hit_by != player:
             ball.x = player.x
@@ -92,35 +93,39 @@ def hit(player):
     return random.random() < success_prob
 '''
 
+import math
+
 def mill_about(player, players, balls, greens, wind):
     # Check if the player already has a target to mill about
     if distance(player.coordinates, player.target_coordinates) < 5:
-        # Define the range of random offsets (within 20 units from the edge of the green)
-        offset_range = 20
-
         while True:
             # Randomly choose an angle
             angle = random.uniform(0, 2 * math.pi)
 
             # Find the player's green
-            green = next((green for green in greens if green.team == player.team_id), None)
+            green = next((g for g in greens if g.team == player.team_id), None)
 
-            # Calculate the random offset distance from the green's edge
-            offset_distance = random.uniform(0, offset_range)
+            if player.position == 'goalie':
+                # Goalies mill about within 5 to 30 units from the green's center
+                offset_distance = random.uniform(5, 30)
+                minimum_distance = 20
+            else:
+                # Blockers can mill about within a larger range
+                offset_distance = random.uniform(0, green.radius + 20)
+                minimum_distance = 50
 
             # Calculate the target coordinates
-            target_x = green.x + (green.radius + offset_distance) * math.cos(angle)
-            target_y = green.y + (green.radius + offset_distance) * math.sin(angle)
+            target_x = green.x + offset_distance * math.cos(angle)
+            target_y = green.y + offset_distance * math.sin(angle)
             coord = Coordinates(target_x, target_y, 0)
 
             # Check if the target is at least 50 units away from the player's current position
-            if distance(player.coordinates, coord) >= 50:
+            if distance(player.coordinates, coord) >= minimum_distance:
                 player.target_coordinates = coord
                 break
-    
-    stay_vigilant = find_approaching_balls(player, balls)
 
-    if distance(player.coordinates, stay_vigilant[0].coordinates) < (player.twitchiness * 10):
+    stay_vigilant = find_approaching_balls(player, balls)
+    if stay_vigilant and distance(player.coordinates, stay_vigilant[0].coordinates) < (player.twitchiness * 10):
         player.action_in_progress = None
         return True
                 

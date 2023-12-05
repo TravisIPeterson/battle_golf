@@ -1,4 +1,6 @@
 import random
+import math
+from game_state import Coordinates
 
 def choose_ball(balls, players, player, greens):
     # Track how many players are targeting each ball
@@ -131,20 +133,36 @@ def intercept_ball(player, players, ball, greens, wind):
         return "ongoing"
 
 def is_player_near_green(player, green, greens):
-    offset_range = [40, -40]
+    # Calculate distance from player to the center of the green
+    distance_from_center = distance(player.coordinates, Coordinates(green.x, green.y, 0))
 
-    return any(green.contains(player.x + dx, player.y + dy) for dx in offset_range for dy in offset_range)
+    if player.position == 'goalie':
+        # Goalies are near the green if they are within 5 to 30 units from the center
+        return distance_from_center <= 30
+    else:
+        # Blockers are near the green if they are within 40 units in either direction
+        return any(green.contains(player.x + dx, player.y + dy) for dx in [40, -40] for dy in [40, -40])
 
 def move_toward_green(player, green, greens):
     direction_x = player.coordinates.x - green.x
     direction_y = player.coordinates.y - green.y
     distance_from_center = (direction_x ** 2 + direction_y ** 2) ** 0.5
 
+    if player.position == 'goalie':
+        # Adjust distance to be within the 5 to 30 unit range from the green's center
+        if distance_from_center > 30:
+            target_distance = 30
+        else:
+            target_distance = distance_from_center  # Stay at current distance if within range
+    elif player.position == 'blocker':
+        # Blockers can move to a position further out
+        target_distance = green.radius + 40
+
     if distance_from_center > 0:
         direction_x /= distance_from_center
         direction_y /= distance_from_center
 
-    target_x = green.x + direction_x * (green.radius + 40)
-    target_y = green.y + direction_y * (green.radius + 40)
+    target_x = green.x + direction_x * target_distance
+    target_y = green.y + direction_y * target_distance
 
     player.move((target_x, target_y), greens, greens) # Wind not needed for function so passing greens an additional time to avoid error because I'm lazy
