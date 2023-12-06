@@ -80,6 +80,12 @@ def find_approaching_balls(player, balls):
 def find_blocker_green(player, greens):
     return next((green for green in greens if green.team == player.team_id), None)
 
+def find_nearby_opponent(player, players):
+    # Find the nearest opponent
+    opponents = [p for p in players if p.team_id != player.team_id]
+    opponents.sort(key=lambda x: distance(player.coordinates, x.coordinates))
+    return opponents[0]
+
 def intercept_ball(player, players, ball, greens, wind):
     if ball.coordinates.z > 20:
         return "unreachable"
@@ -131,6 +137,16 @@ def intercept_ball(player, players, ball, greens, wind):
         return "unreachable"
     else:
         return "ongoing"
+    
+def is_bribed(player):
+    if player.throwing_the_game == True:
+        player.personal_clock -= 1
+        if player.personal_clock <= 0:
+            player.throwing_the_game = False
+            player.personal_clock = 0
+            return False
+        else:
+            return True
 
 def is_player_near_green(player, green, greens):
     # Calculate distance from player to the center of the green

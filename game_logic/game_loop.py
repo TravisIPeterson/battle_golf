@@ -71,10 +71,11 @@ def create_balls(wall, wind):
     num_balls = 8
     balls = []
     for i in range(num_balls):
-        center_x, center_y = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
-        safe_radius = wall.radius * 0.9
-        start_x, start_y = random_point_inside_circle(center_x, center_y, safe_radius)
-        ball = Ball(start_x, start_y, 1, wall, wind)
+        center_x = SCREEN_WIDTH / 2
+        center_y = SCREEN_HEIGHT / 2
+        ball = Ball(center_x, center_y, 1, wall, wind)
+        ball.coordinates.z = 100
+        ball.velocity = [random.uniform(-1, 1), random.uniform(-1, 1), 3]
         balls.append(ball)
 
     return balls

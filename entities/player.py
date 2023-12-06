@@ -42,6 +42,7 @@ class Player:
         self.targeted_opponent = None
         self.target_coordinates = self.coordinates
         self.personal_clock = 0
+        self.throwing_the_game = False
 
     @property
     def x(self):
@@ -164,6 +165,7 @@ class Player:
         return players
 
     def move(self, target_coordinates, greens, wind):
+        self.personal_clock += 1
         # Extract x and y from the target_coordinates if it's not a tuple (for safety)
         target_x, target_y = target_coordinates if isinstance(target_coordinates, tuple) else (target_coordinates.x, target_coordinates.y)
 
@@ -192,6 +194,11 @@ class Player:
                 adjusted_speed = 1.75
         new_x = self.coordinates.x + direction_x * adjusted_speed
         new_y = self.coordinates.y + direction_y * adjusted_speed
+
+        if self.personal_clock > 1000:
+            self.action_completed = True
+            self.action_in_progress = None
+            self.personal_clock = 0
 
         # Check if the new position is on the green of another team
         if not self.position == 'blocker' or not self.position == 'goalie':

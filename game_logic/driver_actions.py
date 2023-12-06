@@ -8,7 +8,7 @@ def determine_driver_action(player, players, ball, greens, wind):
     if proximity < 200 and ball.z < 10:
         if action_determiner <= 80:
             chosen_action= 'drive'
-        elif action_determiner <= 10000000:
+        elif action_determiner <= 100:
             chosen_action= 'precision_hit'
             opponents = players.copy()
             player.targeted_opponent = choose_opponent_target(player, opponents)
