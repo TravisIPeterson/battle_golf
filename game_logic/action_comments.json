@@ -1,0 +1,29 @@
+{
+    "drive": [
+        "{player} drives a ball up the field.",
+        "{player} fires a shot across the field!",
+        "That's a long drive from {player}!"
+    ],
+    "failed_bribe": [
+        "{player} tried to bribe {opponent_name}, but they refused!",
+        "{player} tried to bribe {opponent_name}, but they didn't take the bait.",
+        "{player} tried to bribe {opponent_name}, but they're not having it.",
+        "{player} tried to bribe {opponent_name}, but their love of the game is just too strong.",
+        "{player} tried to bribe {opponent_name}. {opponent_name} is shocked! Shocked I say!"
+    ],
+    "pass_ball": [
+        "{player} passes a ball to {opponent_name}.",
+        "{player} lobs a ball at {opponent_name}.",
+        "{player} slices a ball to {opponent_name}."
+    ],
+    "successful_block": [
+        "{player} blocks a shot!",
+        "{player} snatches away hopes and dreams of victory from the other teams.",
+        "{player} isn't going to let a ball by that easily."
+    ],
+    "successful_bribe": [
+        "What's this? {player} is paying off {opponent_name} to throw the game!",
+        "{player} just slipped {opponent_name} some cash. What's that about?",
+        "{player} is bribing {opponent_name} to throw the game!"
+    ]
+}

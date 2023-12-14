@@ -9,10 +9,10 @@ def determine_caddy_action(player, players, balls, greens, wind):
     if danger_balls:
         player.action_in_progress = 'flee_ball'
     else:
-        action_determiner = random.uniform(0, 100)
-        if action_determiner <= 99:
+        action_determiner = random.uniform(0, 1000)
+        if action_determiner <= 999:
             player.action_in_progress = 'mill_about'
-        elif action_determiner <= 100:
+        elif action_determiner <= 1000:
             player.action_in_progress = 'offer_bribe'
         elif action_determiner <= 75:
             player.action_in_progress = 'praise_teammate'

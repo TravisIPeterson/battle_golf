@@ -83,7 +83,7 @@ class Ball:
 
         # Check if the ball is over the center of a green and its z is less than 1
         for green in greens:
-            if self.z < 1 and abs(self.x - green.hole_x) < 5 and abs(self.y - green.hole_y) < 5:
+            if self.z < 1 and abs(self.x - green.hole_x) < 3 and abs(self.y - green.hole_y) < 3:
                 self.handle_ball_in_hole(green, teams)
                 break
 

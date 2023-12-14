@@ -1,7 +1,11 @@
 import pygame
 import sys
+import textwrap
 sys.path.append('..')
 from utils.constants import *
+from game_logic.game_state import ActionLogManager
+
+action_log_manager = ActionLogManager('../game_logic/action_comments.json')
 
 # Define the size of the square field and the zoom level
 FIELD_SIZE = 100
@@ -26,6 +30,7 @@ def draw_game_state(players, greens, balls, wall, wind, teams, screen):
     screen.fill(SKY_COLOR)
 
     draw_scores(screen, teams)
+    draw_action_log(screen)
 
     # Draw the greens
     for green in greens:
@@ -98,3 +103,20 @@ def draw_scores(screen, teams):
         score_text = TEAM_FONT.render(f"{team.name}: {team.score}", True, team_color)
         screen.blit(score_text, (padding, start_y))
         start_y += score_text.get_height() + padding
+
+def draw_action_log(screen):
+    active_logs = action_log_manager.get_active_logs()
+    print("Active logs:", active_logs)
+    log_start_y = 20
+    log_padding = 10
+    log_x = SCREEN_WIDTH - 400
+    max_width = 50
+
+    for log in active_logs:
+            # Split the log into lines
+            lines = textwrap.wrap(log, max_width)
+
+            for line in lines:
+                log_text = LOG_FONT.render(line, True, TEXT_COLOR)
+                screen.blit(log_text, (log_x, log_start_y))
+                log_start_y += log_text.get_height() + log_padding

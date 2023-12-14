@@ -2,6 +2,7 @@ import random
 import traceback
 import math
 from game_state import Coordinates
+from utils.visualization import action_log_manager
 from entities.ball import Ball
 from entities.wall import Wall
 from action_helpers import distance, choose_ball, choose_teammate_target, find_approaching_balls, find_nearby_opponent, is_bribed
@@ -61,6 +62,7 @@ def block(player, players, ball, greens, wind):
             ball.velocity = [0, 0, 0]  # Reset all components of the velocity
             player.targeted_opponent = choose_teammate_target(player, players)
             player.action_in_progress = 'pass_ball'
+            action_log_manager.add_log('successful_block', player)
         else:
             player.action_in_progress = None
             player.targeted_ball = None
@@ -79,6 +81,9 @@ def drive(player, players, ball, greens, wind):
             ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.15)
             ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
             ball.last_hit_by = player
+            action_log_manager.add_log('drive', player)
+            active_logs = action_log_manager.get_active_logs()
+            print("Active logs:", active_logs)
         else:
             print('drive failed')
             if player.tenacity > random.uniform(6, 10) and proximity < 6:  # Retry if tenacity is high and ball is still near
