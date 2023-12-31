@@ -20,7 +20,8 @@ def choose_action(balls, players, greens, wind):
 
         # Iterate over each player to determine their action
         for player in players:
-
+            if player.name == 'Nando Wife':
+                print(player.action_in_progress)
             # If player has an action in progress, continue it
             if player.action_in_progress and not is_bribed(player):
                 action_function = globals()[player.action_in_progress]
@@ -30,8 +31,9 @@ def choose_action(balls, players, greens, wind):
                     action_completed = action_function(player, players, player.targeted_ball, greens, wind)
 
                 if action_completed:
+                    if player.action_in_progress != 'pursue_ball':
+                        player.targeted_ball = None
                     player.action_in_progress = None
-                    player.targeted_ball = None
             else:
                 # Choose a new ball if targeted ball was removed or the player doesn't have one targeted
                 if player.targeted_ball not in balls:
@@ -58,19 +60,20 @@ def choose_action(balls, players, greens, wind):
 def block(player, players, ball, greens, wind):
     if distance(player.coordinates, ball.coordinates) < 5:
         success_prob = (player.balance + player.power + player.solidity)
-        if random.randint(0, 10) < success_prob and ball.last_hit_by != player:
-            ball.x = player.x
-            ball.y = player.y
-            ball.velocity = [0, 0, 0]  # Reset all components of the velocity
-            player.targeted_opponent = choose_teammate_target(player, players)
-            player.action_in_progress = 'pass_ball'
-        else:
-            player.action_in_progress = None
-            player.targeted_ball = None
-            ball.last_hit_by = player
-            if random.random() > 0.99:
-                action_log_manager.add_log('block_fail', player, ball)
-            return True
+        if ball.last_hit_by != player:
+            if random.randint(0, 10) < success_prob:
+                ball.x = player.x
+                ball.y = player.y
+                ball.velocity = [0, 0, 0]  # Reset all components of the velocity
+                player.targeted_opponent = choose_teammate_target(player, players)
+                player.action_in_progress = 'pass_ball'
+            else:
+                player.action_in_progress = None
+                player.targeted_ball = None
+                ball.last_hit_by = player
+                if random.random() > 0.99:
+                    action_log_manager.add_log('block_fail', player, ball)
+                return True
     else:
         player.action_in_progress = None
         player.targeted_ball = None
@@ -78,7 +81,7 @@ def block(player, players, ball, greens, wind):
 
 def drive(player, players, ball, greens, wind):
     proximity = distance(player.coordinates, ball.coordinates)
-    if proximity < 3 and ball.last_hit_by != player:
+    if proximity < 3:
         if player.competitiveness + player.tenacity > abs(ball.velocity[0]) * abs(ball.velocity[1]):
             direction_x, direction_y = player.aim(greens, wind)
             ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.15)
@@ -226,12 +229,7 @@ def precision_hit(player, players, ball, greens, wind):
         return True
 
 def pursue_ball(player, players, ball, greens, wind):
-    # If ball coordinates are off screen, action in progress is set to none
-    if ball.coordinates.x < 0 or ball.coordinates.x > 1920 or ball.coordinates.y < 0 or ball.coordinates.y > 1080:
-        player.action_in_progress = None
-        player.targeted_ball = None
-        return True
-    
+
     prediction_frames = player.get_prediction_frames(ball)
     predicted_x, predicted_y, predicted_z = ball.predict_future_position(prediction_frames)
 
@@ -240,7 +238,6 @@ def pursue_ball(player, players, ball, greens, wind):
 
     # After moving, check if the player is close enough to interact with the ball
     if distance((player.coordinates), (ball.coordinates)) < 1:
-        player.action_in_progress = None
         return True
     else:
         return False

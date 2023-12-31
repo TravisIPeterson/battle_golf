@@ -72,10 +72,8 @@ def distance(coord1, coord2):
     # Calculate the 2D distance between two positions using the Coordinates objects directly
     return ((coord1.x - coord2.x) ** 2 + (coord1.y - coord2.y) ** 2) ** 0.5
 
-
 def find_approaching_balls(player, balls):
     return sorted(balls, key=lambda ball: distance(player.coordinates, ball.coordinates))
-
 
 def find_blocker_green(player, greens):
     return next((green for green in greens if green.team == player.team_id), None)
