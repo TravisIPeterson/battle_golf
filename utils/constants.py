@@ -13,6 +13,7 @@ SKY_COLOR = (0, 70, 0)
 GREEN_COLOR = (0, 255, 70)
 BLACK_COLOR = (0, 0, 0)
 TEXT_COLOR = (255, 255, 255)
+SCORE_COLOR = (175, 175, 175)
 
 # Font
 WIND_FONT = pygame.font.SysFont('Arial', 20)

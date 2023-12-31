@@ -7,6 +7,7 @@ from entities.wind import Wind
 from entities.wall import Wall
 from game_logic.game_state import Coordinates
 from utils.constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from utils.visualization import action_log_manager
 
 class Ball:
     def __init__(self, x, y, radius, wall, wind):
@@ -101,14 +102,12 @@ class Ball:
             for team in teams:
                 if team.id == green.team:
                     team.score += 1
+                    action_log_manager.add_log('score', team, self)
                     break
 
             # Make the ball disappear
             self.coordinates = Coordinates(-10000000, -1000000000, 0)
             self.velocity = [0, 0, 0]
-
-            # Start a new thread to respawn the ball after 5 seconds
-            threading.Thread(target=self.respawn).start()
 
     def adjust_velocity_towards_green_center(self, green):
         direction_x, direction_y = self.direction_toward_center()
@@ -198,6 +197,7 @@ class Ball:
             for player in players:
                 if player.is_hit(self):
                     player.calculate_hit_consequences(self)
+                    action_log_manager.add_log('hit', player, self)
     
     def calculate_air_time(self):
         if self.z > 0:
@@ -225,12 +225,6 @@ class Ball:
             
         return future_x, future_y, future_z
     
-    def respawn(self):
-        time.sleep(5)
-        self.coordinates = Coordinates(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 250)
-        self.velocity = [random.uniform(-1, 1), random.uniform(-1, 1), 0]
-        self.in_hole = False
-
     def draw(self, surface):
         # Adjust the radius of the ball based on its z value using a linear factor and a slight curve.
         growth_factor = self.z/20 + (math.pow(self.z, 1/2) / 10)  # Combine linear growth with cube root for a smoother transition

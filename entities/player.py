@@ -292,7 +292,7 @@ class Player:
         dy = ball.y - self.y
         distance = math.sqrt(dx**2 + dy**2)
 
-        # Calculate the chance of hitting the ball
+        # Calculate the chance of being hit by the ball
         if ball.last_hit_by:
             if distance < 1 and random.random() < 0.01 and ball.last_hit_by.team_id != self.team_id:
                 if (ball.velocity[0] * ball.velocity[1]) > (self.solidity * self.metabolism  + self.balance + self.tenacity) / self.goutiness:

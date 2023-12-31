@@ -14,6 +14,7 @@ import math
 import random
 
 teams = Team.get_teams_from_db('../teams/battle_golf.db')
+balls = []
 
 def random_point_inside_circle(cx, cy, r):
     theta = random.uniform(0, 2 * math.pi)  # Random angle
@@ -68,14 +69,15 @@ def place_players_on_greens(greens):
     return players
 
 def create_balls(wall, wind):
-    num_balls = 8
-    balls = []
-    for i in range(num_balls):
+    total_balls = random.randint(150, 500)
+
+    initial_drop_count = int(total_balls * random.uniform(0.05, 0.15))
+    for i in range(initial_drop_count):
         center_x = SCREEN_WIDTH / 2
         center_y = SCREEN_HEIGHT / 2
         ball = Ball(center_x, center_y, 1, wall, wind)
-        ball.coordinates.z = 100
-        ball.velocity = [random.uniform(-1, 1), random.uniform(-1, 1), 3]
+        ball.coordinates.z = 750
+        ball.velocity = [random.uniform(-5, 5), random.uniform(-5, 5), -2]
         balls.append(ball)
 
     return balls
@@ -89,8 +91,11 @@ def main_game_loop():
             if event.type == pygame.QUIT:
                 running = False
         for ball in balls:
-            ball.update(greens, teams)
-            ball.check_player_collisions(players)
+            if ball.in_hole == True:
+                balls.remove(ball)
+            else:
+                ball.update(greens, teams)
+                ball.check_player_collisions(players)
         choose_action(balls, players, greens, wind)
         draw_game_state(players, greens, balls, wall, wind, teams, screen)
 

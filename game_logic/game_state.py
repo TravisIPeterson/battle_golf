@@ -22,15 +22,19 @@ class ActionLogManager:
             self.comments = json.load(file)
         self.logs = []
 
-    def add_log(self, action_type, player):
+    def add_log(self, action_type, player, ball):
         if action_type in self.comments:
-            comment_template = random.choice(self.comments[action_type])
-            opponent_name = player.targeted_opponent.name if player.targeted_opponent else 'Blankenship'
-            comment = comment_template.format(player=player.name, opponent=opponent_name)
-            print("Comment template", comment_template)
-            print("Player name", player)
-            print("Opponent name", opponent_name)
-            self.logs.append({'comment': comment, 'timestamp': time.time()})
+            if action_type == 'score':
+                comment_template = random.choice(self.comments[action_type])
+                ball = ball.last_hit_by if ball.last_hit_by else 'The Wind'
+                comment = comment_template.format(player=player.name, ball=ball)
+                self.logs.append({'comment': comment, 'timestamp': time.time()})
+            else:
+                comment_template = random.choice(self.comments[action_type])
+                opponent_name = player.targeted_opponent.name if player.targeted_opponent else 'Cosmo Blankenship'
+                ball = ball.last_hit_by if ball.last_hit_by else 'The Wind'
+                comment = comment_template.format(player=player.name, opponent=opponent_name, ball=ball)
+                self.logs.append({'comment': comment, 'timestamp': time.time()})
 
     def get_active_logs(self):
         current_time = time.time()

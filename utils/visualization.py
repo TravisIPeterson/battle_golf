@@ -1,6 +1,7 @@
 import pygame
 import sys
 import textwrap
+import math
 sys.path.append('..')
 from utils.constants import *
 from game_logic.game_state import ActionLogManager
@@ -41,9 +42,22 @@ def draw_game_state(players, greens, balls, wall, wind, teams, screen):
     for player in players:
         x = player.coordinates.x
         y = player.coordinates.y
-       
-        pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 8)
-        pygame.draw.circle(screen, TEAM_COLORS[player.team_id], (int(x), int(y)), 8)
+
+        if player.position == 'driver':
+            pygame.draw.circle(screen, TEAM_COLORS[player.team_id], (int(x), int(y)), 8)
+        elif player.position == 'blocker':
+            # Draw a diamond
+            pygame.draw.polygon(screen, TEAM_COLORS[player.team_id], [(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)], 0)
+        elif player.position == 'goalie':
+            # Draw a diamond with a thick dark border
+            pygame.draw.polygon(screen, TEAM_COLORS[player.team_id], [(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)], 0)
+            pygame.draw.polygon(screen, BLACK_COLOR, [(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)], 2)
+        elif player.position == 'caddy':
+            # Draw a square
+            pygame.draw.polygon(screen, TEAM_COLORS[player.team_id], [(x - 8, y - 8), (x + 8, y - 8), (x + 8, y + 8), (x - 8, y + 8)], 0)
+        else:
+            # Draw a diamond
+            pygame.draw.polygon(screen, TEAM_COLORS[player.team_id], [(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)], 0)
 
         text_surface = PLAYER_FONT.render(player.initials, True, (0, 0, 0))
         text_rect = text_surface.get_rect(center=(x, y))
@@ -106,17 +120,20 @@ def draw_scores(screen, teams):
 
 def draw_action_log(screen):
     active_logs = action_log_manager.get_active_logs()
-    print("Active logs:", active_logs)
     log_start_y = 20
     log_padding = 10
     log_x = SCREEN_WIDTH - 400
-    max_width = 50
+    max_width = 35
 
     for log in active_logs:
             # Split the log into lines
+            if "  " in log:
+                color = SCORE_COLOR
+            else:
+                color = TEXT_COLOR
             lines = textwrap.wrap(log, max_width)
 
             for line in lines:
-                log_text = LOG_FONT.render(line, True, TEXT_COLOR)
+                log_text = LOG_FONT.render(line, True, color)
                 screen.blit(log_text, (log_x, log_start_y))
                 log_start_y += log_text.get_height() + log_padding

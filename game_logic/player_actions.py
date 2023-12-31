@@ -33,7 +33,9 @@ def choose_action(balls, players, greens, wind):
                     player.action_in_progress = None
                     player.targeted_ball = None
             else:
-                # Choose a new ball if the player doesn't have one targeted
+                # Choose a new ball if targeted ball was removed or the player doesn't have one targeted
+                if player.targeted_ball not in balls:
+                    player.targeted_ball = choose_ball(balls, players, player, greens)
                 if player.targeted_ball is None:
                     player.targeted_ball = choose_ball(balls, players, player, greens)
                 
@@ -56,16 +58,18 @@ def choose_action(balls, players, greens, wind):
 def block(player, players, ball, greens, wind):
     if distance(player.coordinates, ball.coordinates) < 5:
         success_prob = (player.balance + player.power + player.solidity)
-        if random.randint(0, 30) < success_prob and ball.last_hit_by != player:
+        if random.randint(0, 10) < success_prob and ball.last_hit_by != player:
             ball.x = player.x
             ball.y = player.y
             ball.velocity = [0, 0, 0]  # Reset all components of the velocity
             player.targeted_opponent = choose_teammate_target(player, players)
             player.action_in_progress = 'pass_ball'
-            action_log_manager.add_log('successful_block', player)
         else:
             player.action_in_progress = None
             player.targeted_ball = None
+            ball.last_hit_by = player
+            if random.random() > 0.99:
+                action_log_manager.add_log('block_fail', player, ball)
             return True
     else:
         player.action_in_progress = None
@@ -81,13 +85,12 @@ def drive(player, players, ball, greens, wind):
             ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.15)
             ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
             ball.last_hit_by = player
-            action_log_manager.add_log('drive', player)
-            active_logs = action_log_manager.get_active_logs()
-            print("Active logs:", active_logs)
+            if random.random() > 0.5:
+                action_log_manager.add_log('drive_success', player, ball)
         else:
-            print('drive failed')
+            if random.random() > 0.3:
+                action_log_manager.add_log('drive_fail', player, ball)
             if player.tenacity > random.uniform(6, 10) and proximity < 6:  # Retry if tenacity is high and ball is still near
-                print('retrying drive')
                 return drive(player, players, ball, greens, wind)
     player.action_in_progress = None
     player.targeted_ball = None
@@ -121,7 +124,7 @@ def mill_about(player, players, balls, greens, wind):
             if player.position == 'goalie':
                 # Goalies mill about within 5 to 30 units from the green's center
                 offset_distance = random.uniform(5, 30)
-                minimum_distance = 20
+                minimum_distance = 15
                 # Calculate the target coordinates
                 target_x = green.x + offset_distance * math.cos(angle)
                 target_y = green.y + offset_distance * math.sin(angle)
@@ -174,9 +177,9 @@ def offer_bribe(player, players, ball, greens, wind):
         if (player.neoliberalism + player.charisma) * random.random() > (player.targeted_opponent.integrity + player.targeted_opponent.greed) * random.random():
             player.targeted_opponent.throwing_the_game = True
             player.targeted_opponent.personal_clock = player.charisma * player.targeted_opponent.cowardice * player.targeted_opponent.greed * player.targeted_opponent.neoliberalism
-            print(f"{player.name} bribed {player.targeted_opponent.name} to throw the game!")
+            action_log_manager.add_log('bribe_success', player, ball)
         else:
-            print(f"{player.name} tried to bribe {player.targeted_opponent.name} but failed!")
+            action_log_manager.add_log('bribe_fail', player, ball)
     player.action_in_progress = None
     player.targeted_opponent = None
     return True
@@ -191,6 +194,7 @@ def pass_ball(player, players, ball, greens, wind):
     player.action_in_progress = None
     player.targeted_ball = None
     ball.last_hit_by = player
+    action_log_manager.add_log('pass_ball', player, ball)
     return True
 
 def precision_hit(player, players, ball, greens, wind):
@@ -209,13 +213,11 @@ def precision_hit(player, players, ball, greens, wind):
                 ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.15)
                 ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
                 ball.last_hit_by = player
-                print(f"{player.name} tries to knocks a precision strike toward {player.targeted_opponent.name}!")
-            else:
-                print(f"{player.name} had a change of heart.")
         player.action_in_progress = None
         player.targeted_ball = None
         player.targeted_opponent = None
         ball.last_hit_by = player
+        action_log_manager.add_log('precision_hit', player, ball)
         return True
     else:
         player.action_in_progress = None

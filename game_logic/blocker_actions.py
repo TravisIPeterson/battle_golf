@@ -23,7 +23,7 @@ def determine_blocker_action(player, players, balls, greens, wind):
         if intercept_status == "reached":
             player.action_in_progress = "block"
         elif intercept_status == "ongoing":
-            if player.tenacity - (player.twitchiness * random.random()) > random.uniform(7, 10):
+            if player.tenacity - (player.twitchiness * random.random()) > random.uniform(5, 10):
                 player.action_in_progress = "mill_about"
             else: 
                 balls_sorted_by_proximity = find_approaching_balls(player, balls)

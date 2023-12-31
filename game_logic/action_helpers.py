@@ -6,7 +6,7 @@ def choose_ball(balls, players, player, greens):
     # Track how many players are targeting each ball
     ball_target_count = {ball: 0 for ball in balls}
     for p in players:
-        if p.targeted_ball:
+        if p.targeted_ball and p.targeted_ball in balls:
             ball_target_count[p.targeted_ball] += 1
 
     # Maximum number of players that can target the same ball
