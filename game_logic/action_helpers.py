@@ -3,6 +3,8 @@ import math
 from game_state import Coordinates
 
 def choose_ball(balls, players, player, greens):
+    if not balls:
+        return None
     # Track how many players are targeting each ball
     ball_target_count = {ball: 0 for ball in balls}
     for p in players:

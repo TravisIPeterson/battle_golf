@@ -12,6 +12,7 @@ from entities.team import Team
 from game_logic.game_state import Coordinates
 import math
 import random
+import time
 
 teams = Team.get_teams_from_db('../teams/battle_golf.db')
 balls = []
@@ -33,7 +34,6 @@ def initialize_game():
     players = place_players_on_greens(greens)
     wall = Wall(greens)
     wind = Wind()
-    balls = create_balls(wall, wind)
 
     return screen, clock, greens, players, wall, wind, balls
 
@@ -68,25 +68,45 @@ def place_players_on_greens(greens):
 
     return players
 
-def create_balls(wall, wind):
+def create_ball_count():
     total_balls = random.randint(150, 500)
+    initial_drop_count = int(total_balls * random.uniform(0.07, 0.15))
+    return total_balls, initial_drop_count
 
-    initial_drop_count = int(total_balls * random.uniform(0.05, 0.15))
-    for i in range(initial_drop_count):
-        center_x = SCREEN_WIDTH / 2
-        center_y = SCREEN_HEIGHT / 2
-        ball = Ball(center_x, center_y, 1, wall, wind)
-        ball.coordinates.z = 750
-        ball.velocity = [random.uniform(-5, 5), random.uniform(-5, 5), -2]
-        balls.append(ball)
-
-    return balls
+def drop_ball(wall, wind, balls):
+    center_x = SCREEN_WIDTH / random.uniform(1.5, 4)
+    center_y = SCREEN_HEIGHT / random.uniform(1.5, 4)
+    ball = Ball(center_x, center_y, 1, wall, wind)
+    ball.coordinates.z = 500
+    ball.velocity = [random.uniform(-5, 5), random.uniform(-5, 5), -2]
+    balls.append(ball)
 
 def main_game_loop():
     screen, clock, greens, players, wall, wind, balls = initialize_game()
+    total_balls, initial_drop_count = create_ball_count()
+    remaining_balls = total_balls
+    balls = []
+    last_ball_drop_time = time.time()
+    initial_drop_done = False
+    initial_drop_interval = random.uniform(5, 7) / initial_drop_count
 
     running = True
     while running:
+        current_time = time.time()
+        if not initial_drop_done:
+            if current_time - last_ball_drop_time > initial_drop_interval and remaining_balls > 0:
+                drop_ball(wall, wind, balls)
+                remaining_balls -= 1
+                last_ball_drop_time = current_time
+                if remaining_balls == total_balls - initial_drop_count:
+                    initial_drop_done = True
+                    last_ball_drop_time = current_time
+        else:
+            if current_time - last_ball_drop_time > random.uniform(3, 20) and remaining_balls > 0:
+                drop_ball(wall, wind, balls)
+                remaining_balls -= 1
+                last_ball_drop_time = current_time
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
