@@ -186,16 +186,54 @@ def offer_bribe(player, players, ball, greens, wind):
     return True
 
 def pass_ball(player, players, ball, greens, wind):
-    direction_x, direction_y = player.aim_at_opponent(player.targeted_opponent)
-    ball.velocity[0] += (direction_x * player.power) * random.uniform(0.1, 0.15)
-    ball.velocity[1] += (direction_y * player.power) * random.uniform(0.1, 0.15)
-    ball.velocity[2] += player.power * random.uniform(0.3, 0.7)
+    # Constants for physics
+    gravity = 9.81  # Acceleration due to gravity (m/s^2)
+
+    # Calculate the horizontal direction to the target player
+    target_player = player.targeted_opponent
+    distance_x = target_player.x - player.x
+    distance_y = target_player.y - player.y
+    horizontal_distance = math.sqrt(distance_x**2 + distance_y**2)
+
+    # Normalize the direction
+    unit_vector_x = distance_x / horizontal_distance if horizontal_distance != 0 else 0
+    unit_vector_y = distance_y / horizontal_distance if horizontal_distance != 0 else 0
+
+    # Apply player's power to determine velocity
+    horizontal_velocity_x = unit_vector_x * player.power
+    horizontal_velocity_y = unit_vector_y * player.power
+
+    # Calculate initial Z velocity for a trajectory
+    desired_arc_height = 5  # Example height, adjust as needed
+    initial_z_velocity = math.sqrt(2 * gravity * desired_arc_height)
+
+    # Apply wind adjustments
+    wind_direction_vectors = {
+        'N': (0, -1),
+        'NE': (math.sqrt(2)/2, -math.sqrt(2)/2),
+        'E': (1, 0),
+        'SE': (math.sqrt(2)/2, math.sqrt(2)/2),
+        'S': (0, 1),
+        'SW': (-math.sqrt(2)/2, math.sqrt(2)/2),
+        'W': (-1, 0),
+        'NW': (-math.sqrt(2)/2, -math.sqrt(2)/2)
+    }
+    wind_vector = wind_direction_vectors.get(wind.direction, (0, 0))
+    wind_adjustment_x = wind.speed * wind_vector[0]
+    wind_adjustment_y = wind.speed * wind_vector[1]
+
+    # Setting the ball's velocity
+    ball.velocity[0] = horizontal_velocity_x + wind_adjustment_x
+    ball.velocity[1] = horizontal_velocity_y + wind_adjustment_y
+    ball.velocity[2] = initial_z_velocity * 0.5
+
+    # Update game state
     player.targeted_opponent.targeted_ball = ball
-    print("player passed ball")
     player.action_in_progress = None
     player.targeted_ball = None
     ball.last_hit_by = player
     action_log_manager.add_log('pass_ball', player, ball)
+
     return True
 
 def precision_hit(player, players, ball, greens, wind):
