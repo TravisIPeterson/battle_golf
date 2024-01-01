@@ -20,8 +20,6 @@ def choose_action(balls, players, greens, wind):
 
         # Iterate over each player to determine their action
         for player in players:
-            if player.name == 'Nando Wife':
-                print(player.action_in_progress)
             # If player has an action in progress, continue it
             if player.action_in_progress and not is_bribed(player):
                 action_function = globals()[player.action_in_progress]

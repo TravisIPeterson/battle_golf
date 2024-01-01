@@ -9,7 +9,6 @@ def determine_goalie_action(player, players, balls, greens, wind):
     # Check if player is near green, if not, move toward green
     if not is_player_near_green(player, goalie_green, greens):
         move_toward_green(player, goalie_green, greens)
-        return
 
     # Sort balls by proximity
     balls_sorted_by_proximity = find_approaching_balls(player, balls)
@@ -34,7 +33,6 @@ def determine_goalie_action(player, players, balls, greens, wind):
                     intercept_ball(player, players, player.targeted_ball, greens, wind)
         else:
             player.action_in_progress = None
-
 
 def adjust_path_for_goalie(player, green):
     # Calculate distance from the center of the green

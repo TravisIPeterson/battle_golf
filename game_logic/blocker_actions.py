@@ -7,7 +7,6 @@ def determine_blocker_action(player, players, balls, greens, wind):
     # Check if player is near green, if not, move toward green
     if not is_player_near_green(player, blocker_green, greens):
         move_toward_green(player, blocker_green, greens)
-        return
 
     # Sort balls by proximity
     balls_sorted_by_proximity = find_approaching_balls(player, balls)
