@@ -1,7 +1,6 @@
 import pygame
 import sys
 import textwrap
-import math
 sys.path.append('..')
 from utils.constants import *
 from game_logic.game_state import ActionLogManager
@@ -26,13 +25,16 @@ TEAM_COLORS = {
     8: (0, 128, 128)
 }
 
-def draw_game_state(players, greens, balls, wall, wind, teams, screen):
+def draw_game_state(players, greens, balls, wall, wind, teams, screen, remaining_balls):
     if balls:
         # Clear the screen
         screen.fill(SKY_COLOR)
 
         draw_scores(screen, teams)
         draw_action_log(screen)
+
+        ball_count_text = BALL_COUNT_FONT.render(f'Remaining Balls: {remaining_balls}', True, (255, 255, 255))
+        screen.blit(ball_count_text, (5, SCREEN_HEIGHT - 50))
 
         # Draw the greens
         for green in greens:

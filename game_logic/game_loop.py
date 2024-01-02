@@ -69,13 +69,13 @@ def place_players_on_greens(greens):
     return players
 
 def create_ball_count():
-    total_balls = random.randint(150, 500)
-    initial_drop_count = int(total_balls * random.uniform(0.07, 0.15))
+    total_balls = random.randint(150, 300)
+    initial_drop_count = int(total_balls * random.uniform(0.15, 0.25))
     return total_balls, initial_drop_count
 
 def drop_ball(wall, wind, balls):
-    center_x = SCREEN_WIDTH / random.uniform(1.5, 4)
-    center_y = SCREEN_HEIGHT / random.uniform(1.5, 4)
+    center_x = random.uniform(400, 1200)
+    center_y = random.uniform(0, 1080)
     ball = Ball(center_x, center_y, 1, wall, wind)
     ball.coordinates.z = 500
     ball.velocity = [random.uniform(-5, 5), random.uniform(-5, 5), -2]
@@ -98,11 +98,12 @@ def main_game_loop():
                 drop_ball(wall, wind, balls)
                 remaining_balls -= 1
                 last_ball_drop_time = current_time
+                initial_drop_interval = random.random() * 0.1
                 if remaining_balls == total_balls - initial_drop_count:
                     initial_drop_done = True
                     last_ball_drop_time = current_time
         else:
-            if current_time - last_ball_drop_time > random.uniform(3, 20) and remaining_balls > 0:
+            if current_time - last_ball_drop_time > random.uniform(0, 20) and remaining_balls > 0:
                 drop_ball(wall, wind, balls)
                 remaining_balls -= 1
                 last_ball_drop_time = current_time
@@ -117,7 +118,7 @@ def main_game_loop():
                 ball.update(greens, teams)
                 ball.check_player_collisions(players)
         choose_action(balls, players, greens, wind)
-        draw_game_state(players, greens, balls, wall, wind, teams, screen)
+        draw_game_state(players, greens, balls, wall, wind, teams, screen, remaining_balls)
 
         pygame.display.flip()
         clock.tick(60)
